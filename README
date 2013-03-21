@@ -6,7 +6,7 @@ Instructions for using EDirect are provided in doc/ and pdf/ subdirectories with
 
 Once the archive is extracted, you can immediately try EDirect by copying the sample query below into the clipboard and pasting it into a terminal window. (If necessary, run PATH=$PATH:$HOME/edirect at the start of the terminal session to temporarily add the EDirect functions to the PATH environment variable so they can be executed by name.)
 
-  esearch -db pubmed -query "Beadle AND Tatum and Neurospora" | \
+  esearch -db pubmed -query "Beadle AND Tatum AND Neurospora" | \
   elink -related | \
   efilter -query "NOT historical article [FILT]" | \
   esummary | \
