@@ -1,6 +1,8 @@
-Entrez Direct (EDirect) is a new method for accessing the NCBI's interconnected Entrez databases (including PubMed and GenBank). It lets a researcher perform sophisticated multi-step queries without requiring any programming. EDirect constructs an Entrez search from commands typed into a terminal window, using command-line arguments for query terms and combining individual operations with UNIX pipes. It also provides a convenient method for extracting data from document summaries or other results that are returned in XML format.
+ENTREZ DIRECT - README
 
-Documentation is provided in doc/ and pdf/ subdirectories within the software archive. The INTRO file presents each command separately. The executive SUMMARY is an advanced introduction using a typical research question. XTRACT is an E-ticket ride on the XML data extractor. And the user GUIDE contains the most detailed and comprehensive documentation of EDirect.
+Entrez Direct (EDirect) is a new method for accessing the NCBI's interconnected Entrez databases (including PubMed and GenBank). It lets a researcher perform sophisticated multi-step queries without requiring any programming. EDirect constructs an Entrez search from commands typed into a terminal window, using command-line arguments for query terms and combining individual operations with UNIX pipes. It also provides a convenient method for extracting data from document summaries or other results that are returned in XML format. Queries can move seamlessly between EDirect commands and UNIX utilities to perform actions that cannot be accomplished entirely within Entrez.
+
+Instructions for using EDirect are provided in doc/ and pdf/ subdirectories within the software archive. The INTRO file presents each command separately, while the executive SUMMARY is an advanced introduction that follows a realistic research scenario. XTRACT is an E-ticket ride on the XML data extractor. Finally, the user GUIDE contains the most detailed and comprehensive documentation of EDirect functionality.
 
 Once the archive is extracted, you can immediately try EDirect by copying the sample query below into the clipboard and pasting it into a terminal window. (If necessary, run PATH=$PATH:$HOME/edirect at the start of the terminal session to temporarily add the EDirect functions to the PATH environment variable so they can be executed by name.)
 
@@ -9,8 +11,19 @@ Once the archive is extracted, you can immediately try EDirect by copying the sa
   efilter -query "NOT historical article [FILT]" | \
   esummary | \
   xtract -pattern DocumentSummary -match "<Author>" -and "<Title>" \
-    -element Id -first "Author/Name" -element PubDate Title | \
+    -element Id -first "Author/Name" -element Title | \
   grep -i -e enzyme -e synthesis | \
-  sort -t $'\t' -k 2,2f -k 4,4f | column -s $'\t' -t | cut -c 1-128
+  sort -t $'\t' -k 2,2f -k 3,3f | \
+  column -s $'\t' -t | \
+  cut -c 1-80
+
+This returns the PubMed ID, first author name, and article title for PubMed "neighbors" (related citations) of the original publications:
+
+  2960822   Anton IA           A eukaryotic repressor protein, the qa-1S gene prod
+  5264137   Arroyo-Begovich A  In vitro formation of an active multienzyme complex
+  14942736  BONNER DM          Gene-enzyme relationships in Neurospora.
+  5361218   Caroline DF        Pyrimidine synthesis in Neurospora crassa: gene-enz
+  123642    Case ME            Genetic evidence on the organization and action of 
+  ...
 
 Entrez Direct will be released as a supported NCBI product in the near future.
