@@ -46,6 +46,7 @@ use Net::hostent;
 use POSIX;
 use Time::HiRes;
 use URI::Escape;
+use Data::Dumper;
 
 # required first argument is name of function to run
 
@@ -75,7 +76,7 @@ $esummary = "esummary.fcgi";
 
 # EDirect version number
 
-$version = "0.80";
+$version = "0.90";
 
 # utility subroutines
 
@@ -562,7 +563,9 @@ sub do_post {
       $urlx .= "$argx";
     }
     print STDERR "No do_post output returned from '$urlx'\n";
-    print STDERR "Result of do_post http request is '$res'\n";
+    print STDERR "Result of do_post http request is\n";
+    print STDERR Dumper($res);
+    print STDERR "\n";
   }
 
   if ( $debug ) {
