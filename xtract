@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "0.90";
+$version = "0.91";
 
 # initialize memory hash
 
@@ -442,7 +442,7 @@ sub process_flags {
 
       # all flags should be followed by at least one value
 
-      if ( $i + 1 >= $max ) {
+      if ( $i + 1 >= $max and $val ne "-outline" ) {
 
         # warn that the last flag has no value
 
@@ -456,9 +456,59 @@ sub process_flags {
       }
     }
 
+    # print summary of XML structure
+
+    if ( $val eq "-outline" ) {
+
+      my @arr = ();
+      my $lvl = 0;
+
+      my @tokens = split (/(?<=>)(?=<)/, $line);
+      foreach $tkn (@tokens) {
+        if ( $lvl < 0 ) {
+          # ignore remainder if level drops below zero
+        } elsif ( $tkn =~ /^<.+?>.+?<\/(.+?)>$/ ) {
+          # content-containing tag
+		  if ( $tkn =~ /^<(\S+).*?>.*>$/ ) {
+			$tkn = $1;
+			$lvl++;
+			$arr[$lvl] = $tkn;
+			for ( $i = 0; $i < $lvl; $i++ ) {
+			  print "  ";
+			}
+            print "$tkn\n";
+            $lvl--;
+		  }
+        } elsif ( $tkn =~ /^<.+?\/>$/ ) {
+          # self-closing token
+		  if ( $tkn =~ /^<(\S+).*?>$/ ) {
+			$tkn = $1;
+			$arr[$lvl] = $tkn;
+			for ( $i = 0; $i < $lvl; $i++ ) {
+			  print "  ";
+			}
+            print "$tkn\n";
+		  }
+        } elsif ( $tkn =~ /^<[^\/]/ ) {
+          # open tag increments level
+          $lvl++;
+		  if ( $tkn =~ /^<(\S+).*?>$/ ) {
+			$tkn = $1;
+			$arr[$lvl] = $tkn;
+			for ( $i = 0; $i < $lvl; $i++ ) {
+			  print "  ";
+			}
+            print "$tkn\n";
+		  }
+        } elsif ( $tkn =~ /^<\// ) {
+          # close tag decrements level
+          $lvl--;
+        }
+      }
+
     # look for arguments that adjust output formatting
 
-    if ( $val eq "-pfx" ) {
+    } elsif ( $val eq "-pfx" ) {
       $i++;
       $pfx = convert_slash ( $args[$i] );
     } elsif ( $val eq "-sfx" ) {
