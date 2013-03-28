@@ -858,7 +858,7 @@ Extra arguments (-division, -branch, -section, and -unit) are held in reserve to
 Starting xtract exploration with -block, and expanding with -group and -subset, leaves additional level names that can be used wherever needed without having to redesign the entire command.
 
 
-Visual inspection of the XML contents helps determine the appropriate arguments to employ.  Sketching an extraction in pseudo code can clarify relative nesting levels when building complex commands.
+Visual inspection of the XML contents, or use of the -outline argument, help determine the appropriate arguments to employ.  Sketching an extraction in pseudo code can clarify relative nesting levels when building complex commands.
 
 
 QUERYING EXTERNAL WEB SERVICES
@@ -866,7 +866,7 @@ QUERYING EXTERNAL WEB SERVICES
 The EDirect nquire function can be used to obtain data from an arbitrary URL.  Queries are built up from command-line arguments.  For example:
 
   nquire -url "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" \
-         -db pubmed -term insulin
+    -db pubmed -term insulin
 
 reads the URL and then tag/value pairs to generate an EUtils query:
 
@@ -906,7 +906,7 @@ The -alias argument can read a file of shortcut keywords and URL aliases.  The f
 so the command:
 
   nquire -url "(#eutils_url)" esearch.fcgi \
-         -db gds -term "GSE22309 [ACCN] AND gse [ETYP]" -retmax 200
+    -db gds -term "GSE22309 [ACCN] AND gse [ETYP]" -retmax 200
 
 will run an ESearch query and return an eSearchResult XML object.
 
