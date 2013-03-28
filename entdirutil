@@ -70,7 +70,7 @@ sub entdirutil {
     "debug" => \$debug
   );
 
-  print "<EDIRECT>\n";
+  print "<ENTREZ_DIRECT>\n";
 
   if ( $db ne "" ) {
     print "  <Db>$db</Db>\n";
@@ -97,7 +97,7 @@ sub entdirutil {
     print "  <Debug>Y</Debug>\n";
   }
 
-  print "</EDIRECT>\n";
+  print "</ENTREZ_DIRECT>\n";
 }
 
 entdirutil ();
