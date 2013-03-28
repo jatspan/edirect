@@ -76,7 +76,7 @@ $esummary = "esummary.fcgi";
 
 # EDirect version number
 
-$version = "0.90";
+$version = "0.91";
 
 # utility subroutines
 
@@ -298,7 +298,7 @@ sub adjust_base {
   $base = $basx;
 }
 
-# ensure that EDIRECT data structure contains required fields
+# ensure that ENTREZ_DIRECT data structure contains required fields
 
 sub test_edirect {
 
@@ -492,7 +492,7 @@ sub get_uids {
 
 # send actual query
 
-sub do_post {
+sub do_post_yielding_ref {
 
   my $urlx = shift (@_);
   my $argx = shift (@_);
@@ -520,7 +520,8 @@ sub do_post {
     }
   }
 
-  $rslt = "";
+  my $empty = '';
+  $rslt = \$empty;
 
   if ( $debug or $log ) {
     print STDERR "$urlx?$argx\n";
@@ -542,7 +543,7 @@ sub do_post {
       print STDERR "$rslt\n";
     }
 
-    return $rslt;
+    return \$rslt;
   }
 
   $usragnt = new LWP::UserAgent (timeout => 300);
@@ -554,10 +555,10 @@ sub do_post {
   $res = $usragnt->request ( $req );
 
   if ( $res->is_success) {
-    $rslt = $res->content;
+    $rslt = $res->content_ref;
   }
 
-  if ( $rslt eq "" ) {
+  if ( $$rslt eq "" ) {
     if ( $argx ne "" ) {
       $urlx .= "?";
       $urlx .= "$argx";
@@ -569,13 +570,18 @@ sub do_post {
   }
 
   if ( $debug ) {
-    print STDERR "$rslt\n";
+    print STDERR $$rslt, "\n";
   }
 
   return $rslt;
 }
 
-# read EDIRECT data structure
+sub do_post {
+  my $rslt = do_post_yielding_ref(@_);
+  return $$rslt;
+}
+
+# read ENTREZ_DIRECT data structure
 
 sub read_edirect {
 
@@ -668,8 +674,8 @@ sub read_edirect {
       $log = true;
     } elsif ( $thisline =~ /<Log>N<\/Log>/i ) {
       $log = false;
-    } elsif ( $thisline =~ /<EDIRECT>/i ) {
-    } elsif ( $thisline =~ /<\/EDIRECT>/i ) {
+    } elsif ( $thisline =~ /<ENTREZ_DIRECT>/i ) {
+    } elsif ( $thisline =~ /<\/ENTREZ_DIRECT>/i ) {
     } elsif ( $thisline =~ /<Labels>/i ) {
     } elsif ( $thisline =~ /<\/Labels>/i ) {
     } elsif ( $thisline =~ /<Macros>/i ) {
@@ -687,7 +693,7 @@ sub read_edirect {
            $tulx, $emlx, $has_num && $all_num, @other );
 }
 
-# write EDIRECT data structure
+# write ENTREZ_DIRECT data structure
 
 sub write_edirect {
 
@@ -748,7 +754,7 @@ sub write_edirect {
 
   if ( false ) {
     print STDERR "\n";
-    print STDERR "<EDIRECT>\n";
+    print STDERR "<ENTREZ_DIRECT>\n";
 
     if ( $dbsx ne "" ) {
       print STDERR "  <Db>$dbsx</Db>\n";
@@ -775,11 +781,11 @@ sub write_edirect {
       print STDERR "  <Email>$emlx</Email>\n";
     }
 
-    print STDERR "</EDIRECT>\n";
+    print STDERR "</ENTREZ_DIRECT>\n";
     print STDERR "\n";
   }
 
-  print "<EDIRECT>\n";
+  print "<ENTREZ_DIRECT>\n";
 
   if ( $dbsx ne "" ) {
     print "  <Db>$dbsx</Db>\n";
@@ -838,7 +844,7 @@ sub write_edirect {
     print "  </Macros>\n";
   }
 
-  print "</EDIRECT>\n";
+  print "</ENTREZ_DIRECT>\n";
 }
 
 # subroutines for each -function
@@ -1143,7 +1149,8 @@ sub eftch {
       write_edirect ( $dbase, $web, $key, $num, $stp, $err, $tool, $email );
     }
 
-    $chunk = CHUNK;
+    # use larger chunk for UID format
+    $chunk = 1000;
     for ( $start = $min; $start < $max; $start += $chunk ) {
 
       my @ids = get_uids ( $dbase, $web, $key, $start, $chunk, $max, $tool, $email );
@@ -1175,7 +1182,8 @@ sub eftch {
       write_edirect ( $dbase, $web, $key, $num, $stp, $err, $tool, $email );
     }
 
-    $chunk = CHUNK;
+    # use larger chunk for URL format
+    $chunk = 1000;
     for ( $start = $min; $start < $max; $start += $chunk ) {
 
       my @ids = get_uids ( $dbase, $web, $key, $start, $chunk, $max, $tool, $email );
@@ -1213,9 +1221,9 @@ sub eftch {
       $arg .= "&complexity=$complexity";
     }
 
-    $data = do_post ($url, $arg, $tool, $email, true);
+    $data = do_post_yielding_ref ($url, $arg, $tool, $email, true);
 
-    if ($data =~ /<eFetchResult>/i and $data =~ /<ERROR>(.+?)<\/ERROR>/i) {
+    if ($$data =~ /<eFetchResult>/i and $$data =~ /<ERROR>(.+?)<\/ERROR>/i) {
       $err = $1;
       if ( $err ne "" ) {
         if ( ! $silent ) {
@@ -1224,7 +1232,7 @@ sub eftch {
       }
     }
 
-    print "$data";
+    print $$data;
 
     return;
   }
@@ -1267,9 +1275,9 @@ sub eftch {
     $retry = true;
 
     for ( $tries = 0; $tries < 3 && $retry; $tries++) {
-      $data = do_post ($url, $arg, $tool, $email, true);
+      $data = do_post_yielding_ref ($url, $arg, $tool, $email, true);
 
-      if ($data =~ /<eFetchResult>/i and $data =~ /<ERROR>(.+?)<\/ERROR>/i ) {
+      if ($$data =~ /<eFetchResult>/i and $$data =~ /<ERROR>(.+?)<\/ERROR>/i) {
         if ( ! $silent ) {
           print STDERR "Retrying efetch, step $stp: $err\n";
         }
@@ -1279,7 +1287,7 @@ sub eftch {
       }
     }
 
-    if ($data =~ /<eFetchResult>/i and $data =~ /<ERROR>(.+?)<\/ERROR>/i) {
+    if ($$data =~ /<eFetchResult>/i and $$data =~ /<ERROR>(.+?)<\/ERROR>/i) {
       $err = $1;
       if ( $err ne "" ) {
         if ( ! $silent ) {
@@ -1342,7 +1350,7 @@ sub eftch {
         $begin_time = $end_time;
       }
 
-      print "$data";
+      print $$data;
     }
 
     sleep 1;
@@ -1810,7 +1818,7 @@ sub elink {
 
     if ( $cmd ne "neighbor_history" ) {
 
-      # if not neighbor_history, write eLinkResult XML instead of EDIRECT
+      # if not neighbor_history, write eLinkResult XML instead of ENTREZ_DIRECT
 
       print "$data";
 
@@ -1838,7 +1846,7 @@ sub elink {
 
   if ( $cmd ne "neighbor_history" ) {
 
-    # if not neighbor_history, write eLinkResult XML instead of EDIRECT
+    # if not neighbor_history, write eLinkResult XML instead of ENTREZ_DIRECT
 
     $chunk = CHUNK;
     for ( $start = 0; $start < $num; $start += $chunk ) {
@@ -1941,7 +1949,7 @@ sub elink {
     return;
   }
 
-  # finish reality checks, get count and key, and write EDIRECT structure
+  # finish reality checks, get count and key, and write ENTREZ_DIRECT structure
 
   process_history_link ( $arg, $output, $dbase, $dbto, $name, $wb, $web, $key, $stp, $err, $lbl, $tool, $email );
 }
