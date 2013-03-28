@@ -139,7 +139,7 @@ EXAMINING INTERMEDIATE RESULT COUNTS
 
 EDirect uses the Entrez history mechanism to store intermediate results on the EUtils server, and passes a custom XML message with the relevant fields (database, web environment, query key, record count, step number, and optional error string, e-mail address, and software tool name) to the next command in the pipeline.
 
-The results of each step in a query can be examined to confirm expected behavior before adding the next step.  The Count field in the EDIRECT XML object contains the number of records returned by the previous step.  A good measure of query success is a reasonable (non-zero) count value.  For example:
+The results of each step in a query can be examined to confirm expected behavior before adding the next step.  The Count field in the ENTREZ_DIRECT XML object contains the number of records returned by the previous step.  A good measure of query success is a reasonable (non-zero) count value.  For example:
 
   esearch -db protein -query "NP_567004" | \
   elink -related | \
@@ -150,13 +150,13 @@ The results of each step in a query can be examined to confirm expected behavior
 
 produces:
 
-  <EDIRECT>
+  <ENTREZ_DIRECT>
     <Db>structure</Db>
     <WebEnv>NCID_1_545606712_172.16.22.25_5555_1348089299_358182861</WebEnv>
     <QueryKey>8</QueryKey>
     <Count>39</Count>
     <Step>6</Step>
-  </EDIRECT>
+  </ENTREZ_DIRECT>
 
 with 39 protein structures being within the specified molecular weight range and having the desired (X-ray crystallographic) atomic position resolution.
 
@@ -164,7 +164,7 @@ with 39 protein structures being within the specified molecular weight range and
 
 The count can be printed by piping the query through:
 
-  xtract -pattern EDIRECT -element Count
+  xtract -pattern ENTREZ_DIRECT -element Count
 
 
 COMBINING INDEPENDENT QUERY RESULTS
@@ -1206,9 +1206,10 @@ Command-line arguments for the EDirect functions are shown below:
     -tab
     -ret
     -lbl
+    -outline
     -pipe
 
-In addition, -email and -tool are available in all EUtils functions to override default values, -silent will suppress link failure retry messages, -verbose will print the <EDIRECT> field values at each step, -debug can be used to assist with debugging a script by printing the internal URL query and XML results of each step, -http get will force the use of GET instead of POST, -alias will specify a file of shortcut keywords and query strings or URL sections, and -base will specify a particular server for quality assurance testing.
+In addition, -email and -tool are available in all EUtils functions to override default values, -silent will suppress link failure retry messages, -verbose will print the <ENTREZ_DIRECT> field values at each step, -debug can be used to assist with debugging a script by printing the internal URL query and XML results of each step, -http get will force the use of GET instead of POST, -alias will specify a file of shortcut keywords and query strings or URL sections, and -base will specify a particular server for quality assurance testing.
 
 
 Efetch -format and -mode values for each database are shown below:
