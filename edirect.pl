@@ -2426,19 +2426,6 @@ sub esmry {
     $max = $num
   }
 
-  # esummary looping convention currently goes from 1 to n, after fix remove code below
-
-  $url = $base . $einfo;
-  $arg = "db=pubmed&version=2.0";
-
-  $output = do_post ($url, $arg, $tool, $email, true);
-  if ($output !~ /IsTrunc/ and $output !~ /IsRang/) {
-    $min++;
-    $max++;
-  }
-
-  # after esummary looping convention is corrected to 0 to n-1, remove code above
-
   if ( $dbase ne "" and $id ne "" ) {
 
     if ( $id eq "0" ) {
