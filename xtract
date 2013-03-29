@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "0.91";
+$version = "0.92";
 
 # initialize memory hash
 
@@ -1119,7 +1119,7 @@ sub xtract {
   $data =~ s/ +/ /g;
   $data =~ s/> </></g;
 
-  if ( $max < 2 ) {
+  if ( $max == 0 or ( $max == 1 and $ARGV[0] ne "-outline" )) {
 
     # no useful arguments, just print entire line of compressed XML
 
