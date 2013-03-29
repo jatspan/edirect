@@ -10,14 +10,14 @@ Once the archive is extracted, you can immediately try EDirect by copying the sa
   elink -related | \
   efilter -query "NOT historical article [FILT]" | \
   esummary | \
-  xtract -pattern DocumentSummary -match "<Author>" -and "<Title>" \
+  xtract -pattern DocumentSummary -present "Author" -and "Title" \
     -element Id -first "Author/Name" -element Title | \
   grep -i -e enzyme -e synthesis | \
   sort -t $'\t' -k 2,2f -k 3,3f | \
   column -s $'\t' -t | \
   cut -c 1-80
 
-This returns the PubMed ID, first author name, and article title for PubMed "neighbors" (related citations) of the original publications, filters by content, sorts by author name and then by title, and truncates the titles for easier viewing:
+This returns the PubMed ID, first author name, and article title for PubMed "neighbors" (related citations) of the original publications, filters for specific words in the title, sorts by author name and then by title, and truncates the titles for easier viewing:
 
   2960822   Anton IA           A eukaryotic repressor protein, the qa-1S gene prod
   5264137   Arroyo-Begovich A  In vitro formation of an active multienzyme complex
