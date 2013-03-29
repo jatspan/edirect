@@ -715,8 +715,8 @@ the -match filter can be used to print a particular string based on the value:
 The -lbl argument can be used to print arbitrary text:
 
   -group MeshHeading \
-    -block MeshHeading -match QualifierName -lbl "subheadings present" \
-    -block MeshHeading -avoid QualifierName -lbl "subheadings absent"
+    -block MeshHeading -present QualifierName -lbl "subheadings present" \
+    -block MeshHeading -absent QualifierName -lbl "subheadings missing"
 
 
 A value can be recorded in a variable and then displayed multiple times as needed.  Variables are indicated by a hyphen followed by a string of capital letters or digits.  The variable "-ACCN" is referred to as "&ACCN" in an -element argument.
@@ -1193,8 +1193,11 @@ Command-line arguments for the EDirect functions are shown below:
     -section
     -subset
     -unit
+    -trim
     -match
     -avoid
+    -present
+    -absent
     -and
     -or
     -element
