@@ -795,17 +795,17 @@ Setting a variable default value, by placing text in parentheses, can be used to
   -MLWT "(-)"
 
 
-Parallel -match and -avoid statements are used to handle alternative conditions.  For example, in:
+Parallel -present and -absent (or -match and -avoid) statements are used to handle alternative conditions.  For example, in:
 
   efetch -db pubmed -id 1937004,2539356 -format xml | \
   xtract -pattern PubmedArticle -PMID "MedlineCitation/PMID" \
     -group MeshHeading \
-      -block MeshHeading -match QualifierName \
+      -block MeshHeading -present QualifierName \
         -subset DescriptorName -TERM "DescriptorName" -MAJR "@MajorTopicYN" \
         -subset QualifierName -pfx "\n" -element "&PMID" -sep "|" -tab "" \
           -pfx "[" -sfx "]" -element "&MAJR,&TERM" \
           -pfx "{" -sfx "}" -element "@MajorTopicYN,QualifierName" \
-      -block MeshHeading -avoid QualifierName \
+      -block MeshHeading -absent QualifierName \
         -subset DescriptorName -pfx "\n" -element "&PMID" -sep "|" -tab "" \
           -pfx "[" -sfx "]" -element "@MajorTopicYN,DescriptorName"
 
