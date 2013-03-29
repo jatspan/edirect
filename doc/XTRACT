@@ -2,9 +2,9 @@ ENTREZ DIRECT - XML DATA EXTRACTION
 
 The Entrez Direct (EDirect) xtract function uses command-line arguments to direct the selective conversion of XML data into a tab-delimited table. The -pattern argument divides the results into rows, while placement of data into columns is controlled by -element.
 
-Additional xtract arguments are used for limiting exploration to specified regions of the XML (-group, -block, and -subset), filtering by data content (-match and -avoid), and customizing the report presentation. Individual fields can be grouped with commas and given specific prefix, suffix, and separator characters.
+Additional arguments limit exploration to specified XML regions (-group, -block, and -subset), filter by data content (-match and -avoid) or elements (-present and -absent), and customize the report presentation. Individual fields can be grouped with commas and given specific prefix, suffix, and separator characters.
 
-Visual inspection of the XML contents helps determine the appropriate arguments to employ. Tabular data can be piped to standard UNIX utilities or custom scripts for further processing. A query by specific PubMed unique identifiers:
+Inspection of the XML with -outline helps determine the appropriate arguments to employ. Tabular data can be piped to standard UNIX utilities or custom scripts for further processing. A query by specific PubMed unique identifiers:
 
   efetch -db pubmed -id 781293,2678811,6301692,8332518 -format xml | \
   xtract -pattern PubmedArticle -element "MedlineCitation/PMID" \

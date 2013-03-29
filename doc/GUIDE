@@ -372,7 +372,7 @@ The EDirect xtract function is driven by command-line arguments to provide flexi
 
 An XML input stream is split into separate output lines by the -pattern argument.  Within each occurrence of the pattern, specific field names containing the desired data are indicated with the -element argument, and chosen values are normally displayed in columns separated by tab characters.  These commands are comparable to "for each" loops in programming languages in that they automatically explore each occurrence of a specified XML tag in the data.
 
-Additional xtract arguments are used for limiting exploration to specified regions of the XML (-group, -block, and -subset), filtering by data content (-match and -avoid), and customizing the report presentation.  These allow a simple list of arguments to control sophisticated data extraction.  Advanced features of xtract will be discussed in greater detail in the next section.
+Additional xtract arguments limit exploration to specified XML regions (-group, -block, and -subset), filter by data content (-match and -avoid) or elements (-present and -absent), and customize the report presentation.  These allow a simple list of arguments to control sophisticated data extraction.  Advanced features of xtract will be discussed in greater detail in the next section.
 
 
 A query for publications that cite specific PubMed records:
@@ -858,7 +858,7 @@ Extra arguments (-division, -branch, -section, and -unit) are held in reserve to
 Starting xtract exploration with -block, and expanding with -group and -subset, leaves additional level names that can be used wherever needed without having to redesign the entire command.
 
 
-Visual inspection of the XML contents, or use of the -outline argument, help determine the appropriate arguments to employ.  Sketching an extraction in pseudo code can clarify relative nesting levels when building complex commands.
+Visual inspection of the XML structure with the -outline argument helps determine the appropriate arguments to employ.  Sketching an extraction in pseudo code can clarify relative nesting levels when building complex commands.
 
 
 QUERYING EXTERNAL WEB SERVICES
