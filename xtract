@@ -469,37 +469,37 @@ sub process_flags {
           # ignore remainder if level drops below zero
         } elsif ( $tkn =~ /^<.+?>.+?<\/(.+?)>$/ ) {
           # content-containing tag
-		  if ( $tkn =~ /^<(\S+).*?>.*>$/ ) {
-			$tkn = $1;
-			$lvl++;
-			$arr[$lvl] = $tkn;
-			for ( $i = 0; $i < $lvl; $i++ ) {
-			  print "  ";
-			}
+          if ( $tkn =~ /^<(\S+).*?>.*>$/ ) {
+            $tkn = $1;
+            $lvl++;
+            $arr[$lvl] = $tkn;
+            for ( $i = 0; $i < $lvl; $i++ ) {
+              print "  ";
+            }
             print "$tkn\n";
             $lvl--;
-		  }
+          }
         } elsif ( $tkn =~ /^<.+?\/>$/ ) {
           # self-closing token
-		  if ( $tkn =~ /^<(\S+).*?>$/ ) {
-			$tkn = $1;
-			$arr[$lvl] = $tkn;
-			for ( $i = 0; $i < $lvl; $i++ ) {
-			  print "  ";
-			}
+          if ( $tkn =~ /^<(\S+).*?>$/ ) {
+            $tkn = $1;
+            $arr[$lvl] = $tkn;
+            for ( $i = 0; $i < $lvl; $i++ ) {
+              print "  ";
+            }
             print "$tkn\n";
-		  }
+          }
         } elsif ( $tkn =~ /^<[^\/]/ ) {
           # open tag increments level
           $lvl++;
-		  if ( $tkn =~ /^<(\S+).*?>$/ ) {
-			$tkn = $1;
-			$arr[$lvl] = $tkn;
-			for ( $i = 0; $i < $lvl; $i++ ) {
-			  print "  ";
-			}
+          if ( $tkn =~ /^<(\S+).*?>$/ ) {
+            $tkn = $1;
+            $arr[$lvl] = $tkn;
+            for ( $i = 0; $i < $lvl; $i++ ) {
+              print "  ";
+            }
             print "$tkn\n";
-		  }
+          }
         } elsif ( $tkn =~ /^<\// ) {
           # close tag decrements level
           $lvl--;
@@ -692,6 +692,28 @@ sub has_content {
   return false;
 }
 
+sub has_element {
+
+  my $line = shift (@_);
+  my $str = shift (@_);
+
+  if ( $str eq "" ) {
+    return false;
+  }
+
+  # regular expression search for element tag
+
+  if ( $line =~ /<$str(?:\s+.+?)?>/ ) {
+    return true;
+  }
+
+  if ( $line =~ /<$str(?:\s+.+?)?\/>/ ) {
+    return true;
+  }
+
+  return false;
+}
+
 sub process_level {
 
   my $line = shift (@_);
@@ -705,7 +727,7 @@ sub process_level {
   my $max = scalar @args;
 
 
-  # -trim before -match/-avoid removes first XML tag (undocumented)
+  # -trim before -match/-present/-avoid/-absent removes first XML tag (undocumented)
 
   while ( $max > 1 and $args[0] eq "-trim" ) {
 
@@ -762,6 +784,51 @@ sub process_level {
     }
   }
 
+  # -present ... -and/-or ... command filters for indicated element tag
+
+  if ( $max > 2 and $args[0] eq "-present" ) {
+
+    my $required = 1;
+    my $observed = 0;
+    my $prevbool = "";
+
+    my $mtch = $args[1];
+    @args = splice (@args, 2, $max - 2);
+    $max -= 2;
+
+    if ( has_element ( $line, $mtch )) {
+      $observed++;
+    }
+
+    # "or" succeeds on any match, "and" requires all tests to match
+
+    while ( $max > 2 and ( $args[0] eq "-or" or $args[0] eq "-and" )) {
+
+      if ( $prevbool ne "" and $prevbool ne $args[0] ) {
+        print STDERR "A mixture of -and and -or commands cannot follow -present\n";
+        return $tab, $ret;
+      }
+
+      $prevbool = $args[0];
+      if ( $prevbool eq "-and" ) {
+        $required++;
+      }
+
+      $mtch = $args[1];
+      @args = splice (@args, 2, $max - 2);
+      $max -= 2;
+
+      if ( has_element ( $line, $mtch )) {
+        $observed++;
+      }
+    }
+
+    if ( $observed < $required ) {
+      return $tab, $ret;
+    }
+  }
+
+
   # -avoid ... -and ... command filters against indicated data content
 
   if ( $max > 2 and $args[0] eq "-avoid" ) {
@@ -793,8 +860,39 @@ sub process_level {
     }
   }
 
+  # -absent ... -and ... command filters against indicated element tag
 
-  # -trim after -match/-avoid removes first XML tag (undocumented)
+  if ( $max > 2 and $args[0] eq "-absent" ) {
+
+    my $skip = $args[1];
+    @args = splice (@args, 2, $max - 2);
+    $max -= 2;
+
+    if ( has_element ( $line, $skip )) {
+      return $tab, $ret;
+    }
+
+    # colloquial "and" is really logical "or" - any match bails out of function
+
+    while ( $max > 2 and $args[0] eq "-and" ) {
+
+      $skip = $args[1];
+      @args = splice (@args, 2, $max - 2);
+      $max -= 2;
+
+      if ( has_element ( $line, $skip )) {
+        return $tab, $ret;
+      }
+    }
+
+    if ( $max > 1 and $args[0] eq "-or" ) {
+      print STDERR "The -or command cannot follow -absent\n";
+      return $tab, $ret;
+    }
+  }
+
+
+  # -trim after -match/-present/-avoid/-absent removes first XML tag (undocumented)
 
   while ( $max > 1 and $args[0] eq "-trim" ) {
 
