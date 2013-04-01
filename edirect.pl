@@ -76,7 +76,7 @@ $esummary = "esummary.fcgi";
 
 # EDirect version number
 
-$version = "0.91";
+$version = "0.92";
 
 # utility subroutines
 
@@ -2467,7 +2467,8 @@ sub esmry {
 
   $stpminusone = $stp - 1;
 
-  $chunk = CHUNK;
+  # use larger chunk for document summaries
+  $chunk = 1000;
   for ( $start = $min; $start < $max; $start += $chunk ) {
     $url = $base . $esummary;
 
