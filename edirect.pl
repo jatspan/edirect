@@ -61,8 +61,6 @@ $begin_time = Time::HiRes::time();
 use constant false => 0;
 use constant true  => 1;
 
-use constant CHUNK => 100;
-
 # URL address components
 
 $base = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/";
@@ -1246,7 +1244,8 @@ sub eftch {
 
   $stpminusone = $stp - 1;
 
-  $chunk = CHUNK;
+  # use small chunk because fetched records could be quite large
+  $chunk = 100;
   for ( $start = $min; $start < $max; $start += $chunk ) {
     $url = $base . $efetch;
 
@@ -1595,7 +1594,7 @@ sub batch_elink {
   my %seen = ();
   my @uniq = ();
 
-  $chunk = CHUNK;
+  $chunk = 200;
   for ( $start = 0; $start < $num; $start += $chunk ) {
 
     my @ids = get_uids ( $dbase, $web, $key, $start, $chunk, $num, $tool, $email );
@@ -1848,7 +1847,7 @@ sub elink {
 
     # if not neighbor_history, write eLinkResult XML instead of ENTREZ_DIRECT
 
-    $chunk = CHUNK;
+    $chunk = 200;
     for ( $start = 0; $start < $num; $start += $chunk ) {
 
       my @ids = get_uids ( $dbase, $web, $key, $start, $chunk, $num, $tool, $email );
@@ -1994,7 +1993,7 @@ sub emmdb {
 
   test_edirect ( $dbase, $web, $key, $num, "mmdb" );
 
-  $chunk = CHUNK;
+  $chunk = 100;
   for ( $start = 0; $start < $num; $start += $chunk ) {
 
     my @ids = get_uids ( $dbase, $web, $key, $start, $chunk, $num, $tool, $email );
@@ -2059,7 +2058,7 @@ sub entfy {
   binmode STDOUT, ":utf8";
 
   if ( $num > 0 ) {
-    $chunk = CHUNK;
+    $chunk = 100;
     for ( $start = 0; $start < $num; $start += $chunk ) {
 
       my @ids = get_uids ( $dbase, $web, $key, $start, $chunk, $num, $tool, $email );
