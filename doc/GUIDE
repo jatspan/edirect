@@ -863,7 +863,7 @@ Starting xtract exploration with -block, and expanding with -group and -subset, 
 
 XML DATA EXTRACTION SPECIAL TOPICS
 
-Certain XML objects returned by efetch are recursively defined, including Taxon in TaxaSet (-db taxonomy) and Gene-commentary in Entrezgene_comments (-db gene), and thus can have nested objects with the same XML tag.  Retrieval of two taxonomy records:
+Certain XML objects returned by efetch are recursively defined, including Taxon in TaxaSet (-db taxonomy) and Gene-commentary in Entrezgene_comments (-db gene).  Thus, they can have nested objects with the same XML tag.  Retrieval of taxonomy records for human and fruit fly:
 
   efetch -db taxonomy -id 9606,7227 -format xml
 
@@ -896,7 +896,7 @@ produces XML with nested Taxon objects (marked below with line references) for e
 8     </Taxon>
     </TaxaSet>
 
-Although <Taxon> on line 1 actually pairs with </Taxon> on line 6, regular expression pattern searching for data between <Taxon> and </Taxon> will incorrectly match <Taxon> on line 1 with the first </Taxon> on line 3.
+Although <Taxon> on line 1 is actually closed by </Taxon> on line 6, use of "-group Taxon" to visit data between <Taxon> and </Taxon> pairs will incorrectly match it with the first </Taxon> on line 3.
 
 Xtract circumvents this artifact with an alternative search algorithm that tracks XML object depth, instead of using regular expression pattern matching, and which is triggered by capitalized versions of the exploration commands:
 
@@ -914,12 +914,12 @@ Extraction of data with a capitalized -Group argument:
   xtract -pattern TaxaSet -Group Taxon -sfx "\n" -tab "" -ret "" \
     -first TaxId,ScientificName,GenbankCommonName
 
-returns information only for the main entries:
+behaves as desired and returns information for the main entries:
 
   9606    Homo sapiens               human
   7227    Drosophila melanogaster    fruit fly
 
-instead of erroneously visiting the entries for each taxonomic lineage level:
+Use of lower-case "-group" erroneously visits the entries for each taxonomic lineage level (skipping the first because of the pattern matching artifact):
 
   9606     Homo sapiens    human
   2759     Eukaryota
@@ -944,46 +944,48 @@ correctly finds all appropriate accessions in Entrezgene records:
 (There is no capitalized version of the top-level -pattern organizer.)
 
 
-The -trim argument will remove the first tag (e.g., <Taxon>) so that subsequent explorations are able to visit the internal objects.
+The -trim argument will remove the first tag (e.g., <Taxon>) so that subsequent explorations are able to visit the internal objects:
+
+  efetch -db taxonomy -id 9606,7227 -format xml | \
+  xtract -pattern TaxaSet -Group Taxon -trim -block Taxon -sfx "\n" \
+    -tab "" -ret "" -first TaxId,ScientificName,GenbankCommonName
+
+returns:
+
+  131567    cellular organisms
+  2759      Eukaryota
+  33154     Opisthokonta
+  33208     Metazoa
+  ...
 
 
 Visual inspection of the XML structure with the -outline argument helps determine the appropriate arguments to employ.  A pubmed summary query:
 
-  esummary -db pubmed -id 2539356
+  esummary -db pubmed -id 16588492
 
 retrieves an XML document summary:
 
   <eSummaryResult>
     <DocumentSummarySet status="OK">
-      <DocumentSummary uid="2539356">
-        <Id>2539356</Id>
-        <PubDate>1989 Apr</PubDate>
+      <DocumentSummary uid="16588492">
+        <Id>16588492</Id>
+        <PubDate>1941 Nov 15</PubDate>
         <EPubDate/>
-        <Source>J Bacteriol</Source>
+        <Source>Proc Natl Acad Sci U S A</Source>
         <Authors>
           <Author>
-            <Name>Kans JA</Name>
+            <Name>Beadle GW</Name>
             <AuthType>Author</AuthType>
-            <ClusterID>3480501</ClusterID>
+            <ClusterID>518804</ClusterID>
           </Author>
           <Author>
-            <Name>Casadaban MJ</Name>
+            <Name>Tatum EL</Name>
             <AuthType>Author</AuthType>
-            <ClusterID>1240769</ClusterID>
+            <ClusterID>6857925</ClusterID>
           </Author>
         </Authors>
-        <LastAuthor>Casadaban MJ</LastAuthor>
-        <Title>Nucleotide sequences required for Tn3 transposition ...</Title>
-        <SortTitle>nucleotide sequences required for tn3 ...</SortTitle>
-        <Volume>171</Volume>
-        <Issue>4</Issue>
-        <Pages>1904-14</Pages>
-        <Lang>
-          <string>eng</string>
-        </Lang>
-        <NlmUniqueID>2985120R</NlmUniqueID>
-        <ISSN>0021-9193</ISSN>
-        <ESSN>1098-5530</ESSN>
+        <LastAuthor>Tatum EL</LastAuthor>
+        <Title>Genetic Control of Biochemical Reactions in Neurospora.</Title>
         ...
 
 that can be piped through:
@@ -995,7 +997,7 @@ to return an outline that shows XML structure and tag names but without attribut
   DocumentSummary
     Id
     PubDate
-    EPubDate
+  EPubDate/
     Source
     Authors
       Author
@@ -1018,12 +1020,9 @@ to return an outline that shows XML structure and tag names but without attribut
     ISSN
     ESSN
     PubType
-      flag
-    RecordStatus
-    PubStatus
     ...
 
-The -outline argument gives a clear, uncluttered picture of the XML hierarchy that is useful in designing an appropriate xtract command.  Copy-and-paste from the -outline output to -element (or -group, -block, or -subset) arguments can help avoid typographical errors.
+The outline view presents a clear, uncluttered picture of the XML hierarchy that is useful in designing the appropriate command for actual data extraction.  Copy and paste from the -outline output to xtract arguments (-element, -group, -match, etc.) can help avoid typographical errors.
 
 
 QUERYING EXTERNAL WEB SERVICES
