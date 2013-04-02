@@ -844,6 +844,9 @@ could be represented as a computer program in pseudo code by:
     }
   }
 
+Sketching an extraction in pseudo code can clarify relative nesting levels when building complex commands.
+
+
 Extra arguments (-division, -branch, -section, and -unit) are held in reserve to provide additional levels of organization, should the need arise in the future for complex, deeply-nested XML data.  The full set of commands, in order of rank, are:
 
   -pattern
@@ -858,7 +861,169 @@ Extra arguments (-division, -branch, -section, and -unit) are held in reserve to
 Starting xtract exploration with -block, and expanding with -group and -subset, leaves additional level names that can be used wherever needed without having to redesign the entire command.
 
 
-Visual inspection of the XML structure with the -outline argument helps determine the appropriate arguments to employ.  Sketching an extraction in pseudo code can clarify relative nesting levels when building complex commands.
+XML DATA EXTRACTION SPECIAL TOPICS
+
+Certain XML objects returned by efetch are recursively defined, including Taxon in TaxaSet (-db taxonomy) and Gene-commentary in Entrezgene_comments (-db gene), and thus can have nested objects with the same XML tag.  Retrieval of two taxonomy records:
+
+  efetch -db taxonomy -id 9606,7227 -format xml
+
+produces XML with nested Taxon objects (marked below with line references) for each rank in the taxonomic lineage:
+
+    <TaxaSet>
+1     <Taxon>
+        <TaxId>9606</TaxId>
+        <ScientificName>Homo sapiens</ScientificName>
+        ...
+        <LineageEx>
+2         <Taxon>
+            <TaxId>131567</TaxId>
+            <ScientificName>cellular organisms</ScientificName>
+            <Rank>no rank</Rank>
+3         </Taxon>
+4         <Taxon>
+            <TaxId>2759</TaxId>
+            <ScientificName>Eukaryota</ScientificName>
+            <Rank>superkingdom</Rank>
+5         </Taxon>
+          ...
+        </LineageEx>
+        ...
+6     </Taxon>
+7     <Taxon>
+        <TaxId>7227</TaxId>
+        <ScientificName>Drosophila melanogaster</ScientificName>
+        ...
+8     </Taxon>
+    </TaxaSet>
+
+Although <Taxon> on line 1 actually pairs with </Taxon> on line 6, regular expression pattern searching for data between <Taxon> and </Taxon> will incorrectly match <Taxon> on line 1 with the first </Taxon> on line 3.
+
+Xtract circumvents this artifact with an alternative search algorithm that tracks XML object depth, instead of using regular expression pattern matching, and which is triggered by capitalized versions of the exploration commands:
+
+  -Division
+  -Group
+  -Branch
+  -Block
+  -Section
+  -Subset
+  -Unit
+
+Extraction of data with a capitalized -Group argument:
+
+  efetch -db taxonomy -id 9606,7227 -format xml | \
+  xtract -pattern TaxaSet -Group Taxon -sfx "\n" -tab "" -ret "" \
+    -first TaxId,ScientificName,GenbankCommonName
+
+returns information only for the main entries:
+
+  9606    Homo sapiens               human
+  7227    Drosophila melanogaster    fruit fly
+
+instead of erroneously visiting the entries for each taxonomic lineage level:
+
+  9606     Homo sapiens    human
+  2759     Eukaryota
+  33154    Opisthokonta
+  33208    Metazoa
+  ...
+
+Similarly, use of a capitalized -Block argument:
+
+  efetch -db gene -id 837025,837031 -format xml | \
+  xtract -pattern Entrezgene_comments \
+    -Block Gene-commentary -match "Related Sequences" \
+    -element Gene-commentary_accession
+
+correctly finds all appropriate accessions in Entrezgene records:
+
+  CP002684    AEE27818    DQ446230    ABE65601
+  CP002684    AEE27823    CP002684    AEE27824    CP002684    AEE27825
+
+(The alternative search algorithm is significantly slower than the regular expression version in the current implementation, so capitalized exploration arguments should only be used when necessary to handle recursive elements.)
+
+(There is no capitalized version of the top-level -pattern organizer.)
+
+
+The -trim argument will remove the first tag (e.g., <Taxon>) so that subsequent explorations are able to visit the internal objects.
+
+
+Visual inspection of the XML structure with the -outline argument helps determine the appropriate arguments to employ.  A pubmed summary query:
+
+  esummary -db pubmed -id 2539356
+
+retrieves an XML document summary:
+
+  <eSummaryResult>
+    <DocumentSummarySet status="OK">
+      <DocumentSummary uid="2539356">
+        <Id>2539356</Id>
+        <PubDate>1989 Apr</PubDate>
+        <EPubDate/>
+        <Source>J Bacteriol</Source>
+        <Authors>
+          <Author>
+            <Name>Kans JA</Name>
+            <AuthType>Author</AuthType>
+            <ClusterID>3480501</ClusterID>
+          </Author>
+          <Author>
+            <Name>Casadaban MJ</Name>
+            <AuthType>Author</AuthType>
+            <ClusterID>1240769</ClusterID>
+          </Author>
+        </Authors>
+        <LastAuthor>Casadaban MJ</LastAuthor>
+        <Title>Nucleotide sequences required for Tn3 transposition ...</Title>
+        <SortTitle>nucleotide sequences required for tn3 ...</SortTitle>
+        <Volume>171</Volume>
+        <Issue>4</Issue>
+        <Pages>1904-14</Pages>
+        <Lang>
+          <string>eng</string>
+        </Lang>
+        <NlmUniqueID>2985120R</NlmUniqueID>
+        <ISSN>0021-9193</ISSN>
+        <ESSN>1098-5530</ESSN>
+        ...
+
+that can be piped through:
+
+  xtract -pattern DocumentSummary -outline
+
+to return an outline that shows XML structure and tag names but without attributes, closing tags, and content values:
+
+  DocumentSummary
+    Id
+    PubDate
+    EPubDate
+    Source
+    Authors
+      Author
+        Name
+        AuthType
+        ClusterID
+      Author
+        Name
+        AuthType
+        ClusterID
+    LastAuthor
+    Title
+    SortTitle
+    Volume
+    Issue
+    Pages
+    Lang
+      string
+    NlmUniqueID
+    ISSN
+    ESSN
+    PubType
+      flag
+    RecordStatus
+    PubStatus
+    ...
+
+The -outline argument gives a clear, uncluttered picture of the XML hierarchy that is useful in designing an appropriate xtract command.  Copy-and-paste from the -outline output to -element (or -group, -block, or -subset) arguments can help avoid typographical errors.
 
 
 QUERYING EXTERNAL WEB SERVICES
