@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "0.92";
+$version = "0.93";
 
 # initialize memory hash
 
@@ -481,13 +481,15 @@ sub process_flags {
           }
         } elsif ( $tkn =~ /^<.+?\/>$/ ) {
           # self-closing token
-          if ( $tkn =~ /^<(\S+).*?>$/ ) {
+          if ( $tkn =~ /^<(\S+).*?\/>$/ ) {
             $tkn = $1;
+            $lvl++;
             $arr[$lvl] = $tkn;
             for ( $i = 0; $i < $lvl; $i++ ) {
               print "  ";
             }
             print "$tkn\n";
+            $lvl--;
           }
         } elsif ( $tkn =~ /^<[^\/]/ ) {
           # open tag increments level
@@ -727,7 +729,7 @@ sub process_level {
   my $max = scalar @args;
 
 
-  # -trim before -match/-present/-avoid/-absent removes first XML tag (undocumented)
+  # -trim before -match/-present/-avoid/-absent removes first XML tag
 
   while ( $max > 1 and $args[0] eq "-trim" ) {
 
@@ -892,7 +894,7 @@ sub process_level {
   }
 
 
-  # -trim after -match/-present/-avoid/-absent removes first XML tag (undocumented)
+  # -trim after -match/-present/-avoid/-absent removes first XML tag
 
   while ( $max > 1 and $args[0] eq "-trim" ) {
 
@@ -916,7 +918,7 @@ sub process_level {
 
   # get name of command for current organizer level
 
-  # initial capital signifies tokenized search matching nesting levels (undocumented)
+  # initial capital signifies tokenized search matching nesting levels
 
   # (tokenizing is significantly slower than regular expression pattern matching)
 

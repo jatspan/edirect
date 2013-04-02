@@ -861,7 +861,7 @@ Extra arguments (-division, -branch, -section, and -unit) are held in reserve to
 Starting xtract exploration with -block, and expanding with -group and -subset, leaves additional level names that can be used wherever needed without having to redesign the entire command.
 
 
-XML DATA EXTRACTION SPECIAL TOPICS
+XTRACT SPECIAL TOPICS
 
 Certain XML objects returned by efetch are recursively defined, including Taxon in TaxaSet (-db taxonomy) and Gene-commentary in Entrezgene_comments (-db gene).  Thus, they can have nested objects with the same XML tag.  Retrieval of taxonomy records for human and fruit fly:
 
@@ -959,7 +959,7 @@ returns:
   ...
 
 
-Visual inspection of the XML structure with the -outline argument helps determine the appropriate arguments to employ.  A pubmed summary query:
+Visual inspection of the XML structure with the -outline argument helps determine the appropriate xtract arguments to employ.  A pubmed summary query:
 
   esummary -db pubmed -id 16588492
 
@@ -970,7 +970,7 @@ retrieves an XML document summary:
       <DocumentSummary uid="16588492">
         <Id>16588492</Id>
         <PubDate>1941 Nov 15</PubDate>
-        <EPubDate/>
+        <EPubDate></EPubDate>
         <Source>Proc Natl Acad Sci U S A</Source>
         <Authors>
           <Author>
@@ -997,7 +997,7 @@ to return an outline that shows XML structure and tag names but without attribut
   DocumentSummary
     Id
     PubDate
-  EPubDate/
+    EPubDate
     Source
     Authors
       Author
