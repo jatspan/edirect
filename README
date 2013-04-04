@@ -28,4 +28,6 @@ This query returns the PubMed ID, first author name, and article title for PubMe
   123642    Case ME            Genetic evidence on the organization and action of 
   ...
 
-Entrez Direct will be released as a supported NCBI product in the near future.
+EDirect will run on UNIX and Macintosh computers that have the Perl language installed, and under the Cygwin UNIX-emulation environment on Windows PCs.
+
+EDirect will be released as a supported NCBI product in the near future. Questions or comments may be sent to eutilities@ncbi.nlm.nih.gov.
