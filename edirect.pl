@@ -204,7 +204,7 @@ sub map_labels {
   }
 
   if ( scalar (keys %labels) > 0 ) {
-    for ( keys % labels ) {
+    for ( keys %labels ) {
       $ky = $_;
       $vl = $labels{$_};
       $qury =~ s/\((#$ky)\)/\($vl#\)/g;
@@ -224,7 +224,7 @@ sub map_macros {
   }
 
   if ( scalar (keys %macros) > 0 ) {
-    for ( keys % macros ) {
+    for ( keys %macros ) {
       $ky = $_;
       $vl = $macros{$_};
       $qury =~ s/\((\#$ky)\)/$vl/g;
@@ -823,7 +823,7 @@ sub write_edirect {
   }
   if ( scalar (keys %labels) > 0 ) {
     print "  <Labels>\n";
-    for ( keys % labels ) {
+    for ( keys %labels ) {
       print "    <Label>\n";
       print "      <Key>$_</Key>\n";
       print "      <Val>$labels{$_}</Val>\n";
@@ -833,7 +833,7 @@ sub write_edirect {
   }
   if ( scalar (keys %macros) > 0 ) {
     print "  <Macros>\n";
-    for ( keys % macros ) {
+    for ( keys %macros ) {
       print "    <Macro>\n";
       print "      <Key>$_</Key>\n";
       print "      <Val>$macros{$_}</Val>\n";
