@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "0.93";
+$version = "0.94";
 
 # initialize memory hash
 
@@ -461,10 +461,12 @@ sub process_flags {
     if ( $val eq "-outline" ) {
 
       my @arr = ();
+      my %acc = ();
       my $lvl = 0;
 
       my @tokens = split (/(?<=>)(?=<)/, $line);
       foreach $tkn (@tokens) {
+        my $record_level = 0;
         if ( $lvl < 0 ) {
           # ignore remainder if level drops below zero
         } elsif ( $tkn =~ /^<.+?>.+?<\/(.+?)>$/ ) {
@@ -473,6 +475,7 @@ sub process_flags {
             $tkn = $1;
             $lvl++;
             $arr[$lvl] = $tkn;
+            $record_level = $lvl;
             for ( $i = 0; $i < $lvl; $i++ ) {
               print "  ";
             }
@@ -485,6 +488,7 @@ sub process_flags {
             $tkn = $1;
             $lvl++;
             $arr[$lvl] = $tkn;
+            $record_level = $lvl;
             for ( $i = 0; $i < $lvl; $i++ ) {
               print "  ";
             }
@@ -497,6 +501,7 @@ sub process_flags {
           if ( $tkn =~ /^<(\S+).*?>$/ ) {
             $tkn = $1;
             $arr[$lvl] = $tkn;
+            $record_level = $lvl;
             for ( $i = 0; $i < $lvl; $i++ ) {
               print "  ";
             }
@@ -505,6 +510,35 @@ sub process_flags {
         } elsif ( $tkn =~ /^<\// ) {
           # close tag decrements level
           $lvl--;
+        }
+        if ( $record_level > 0 ) {
+          my $str = "";
+          my $pfx = "";
+          for ( $i = 1; $i <= $record_level; $i++ ) {
+            $itm = $arr[$i];
+            if ( $itm ne "?xml" and $itm ne "!DOCTYPE" ) {
+              $str .= "$pfx";
+              $pfx = "/";
+              $str .= "$arr[$i]";
+            }
+          }
+          if ( $str ne "" ) {
+            my $val = 0;
+            if ( exists ($acc{"$str"}) ) {
+              $val = $acc{"$str"};
+            }
+            $val++;
+            $acc{"$str"} = $val;
+          }
+        }
+      }
+      if ( scalar (keys %acc) > 0 ) {
+        print "\n";
+        my @keys;
+        @keys = keys %acc;
+        for my $ky (sort @keys) {
+          $vl = $acc{$ky};
+          print "  $vl\t$ky\n";
         }
       }
 
