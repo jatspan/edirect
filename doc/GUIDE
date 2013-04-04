@@ -961,38 +961,38 @@ returns:
 
 Visual inspection of the XML structure with the -outline argument helps determine the appropriate xtract arguments to employ.  A pubmed summary query:
 
-  esummary -db pubmed -id 16588492
+  esummary -db pubmed -id 9159100
 
 retrieves an XML document summary:
 
   <eSummaryResult>
     <DocumentSummarySet status="OK">
-      <DocumentSummary uid="16588492">
-        <Id>16588492</Id>
-        <PubDate>1941 Nov 15</PubDate>
+      <DocumentSummary uid="9159100">
+        <Id>9159100</Id>
+        <PubDate>1997 May 27</PubDate>
         <EPubDate></EPubDate>
         <Source>Proc Natl Acad Sci U S A</Source>
         <Authors>
           <Author>
-            <Name>Beadle GW</Name>
+            <Name>Botstein D</Name>
             <AuthType>Author</AuthType>
-            <ClusterID>518804</ClusterID>
+            <ClusterID>440656</ClusterID>
           </Author>
           <Author>
-            <Name>Tatum EL</Name>
+            <Name>Cherry JM</Name>
             <AuthType>Author</AuthType>
-            <ClusterID>6857925</ClusterID>
+            <ClusterID>1178586</ClusterID>
           </Author>
         </Authors>
-        <LastAuthor>Tatum EL</LastAuthor>
-        <Title>Genetic Control of Biochemical Reactions in Neurospora.</Title>
+        <LastAuthor>Cherry JM</LastAuthor>
+        <Title>Molecular linguistics: extracting information from gene ...</Title>
         ...
 
 that can be piped through:
 
   xtract -pattern DocumentSummary -outline
 
-to return an outline that shows XML structure and tag names but without attributes, closing tags, and content values:
+to return an outline that shows XML structure and tag names (but without closing tags, attributes, and content values) followed by a table of unique path counts:
 
   DocumentSummary
     Id
@@ -1012,15 +1012,15 @@ to return an outline that shows XML structure and tag names but without attribut
     Title
     SortTitle
     Volume
-    Issue
-    Pages
-    Lang
-      string
-    NlmUniqueID
-    ISSN
-    ESSN
-    PubType
     ...
+
+  1  DocumentSummary
+  1  DocumentSummary/ArticleIds
+  3  DocumentSummary/ArticleIds/ArticleId
+  3  DocumentSummary/ArticleIds/ArticleId/IdType
+  3  DocumentSummary/ArticleIds/ArticleId/IdTypeN
+  3  DocumentSummary/ArticleIds/ArticleId/Value
+  ...
 
 The outline view presents a clear, uncluttered picture of the XML hierarchy that is useful in designing the appropriate command for actual data extraction.  Copy and paste from the -outline output to xtract arguments (-element, -group, -match, etc.) can help avoid typographical errors.
 
