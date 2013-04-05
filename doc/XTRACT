@@ -67,7 +67,7 @@ The normal column-oriented output can be extensively modified to produce a custo
       -block INSDQualifier -avoid ">translation<" -and ">peptide<" -pfx "\t\t\t" \
         -sfx "\n" -tab "" -element INSDQualifier_name,INSDQualifier_value
 
-generates the 5-column feature table format used for GenBank submissions:
+clears the feature key variable after its first use to generate the 5-column feature table format used for GenBank submissions:
 
   >Feature gb|GQ370762.1|
   51      1474    gene
