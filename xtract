@@ -50,10 +50,10 @@ $version = "0.95";
 
 my %memory = ();
 
-# initialize summary variables
+# initialize synopsis variables
 
-my %summary_acc = ();
-my $summary_max = 0;
+my %synopsis_acc = ();
+my $synopsis_max = 0;
 
 # utility subroutines
 
@@ -447,7 +447,7 @@ sub process_flags {
 
       # all flags should be followed by at least one value
 
-      if ( $i + 1 >= $max and $val ne "-outline" and $val ne "-summary" ) {
+      if ( $i + 1 >= $max and $val ne "-outline" and $val ne "-synopsis" ) {
 
         # warn that the last flag has no value
 
@@ -511,7 +511,7 @@ sub process_flags {
 
     # collect summary of XML paths, print at end
 
-    } elsif ( $val eq "-summary" ) {
+    } elsif ( $val eq "-synopsis" ) {
 
       my @arr = ();
       my $lvl = 0;
@@ -567,13 +567,13 @@ sub process_flags {
           }
           if ( $str ne "" ) {
             my $val = 0;
-            if ( exists ($summary_acc{"$str"}) ) {
-              $val = $summary_acc{"$str"};
+            if ( exists ($synopsis_acc{"$str"}) ) {
+              $val = $synopsis_acc{"$str"};
             }
             $val++;
-            $summary_acc{"$str"} = $val;
-            if ( $val > $summary_max ) {
-              $summary_max = $val;
+            $synopsis_acc{"$str"} = $val;
+            if ( $val > $synopsis_max ) {
+              $synopsis_max = $val;
             }
           }
         }
@@ -1192,7 +1192,7 @@ sub xtract {
   $data =~ s/ +/ /g;
   $data =~ s/> </></g;
 
-  if ( $max == 0 or ( $max == 1 and $ARGV[0] ne "-outline" and $ARGV[0] ne "-summary" )) {
+  if ( $max == 0 or ( $max == 1 and $ARGV[0] ne "-outline" and $ARGV[0] ne "-synopsis" )) {
 
     # no useful arguments, just print entire line of compressed XML
 
@@ -1256,23 +1256,23 @@ sub xtract {
 
 xtract ();
 
-# print cumulative summary of XML paths
+# if -synopsis, print cumulative summary of XML paths
 
-if ( scalar (keys %summary_acc) > 0 ) {
+if ( scalar (keys %synopsis_acc) > 0 ) {
   my $spaces = 1;
-  if ( $summary_max > 9999 ) {
+  if ( $synopsis_max > 9999 ) {
     $spaces = 5;
-  } elsif ( $summary_max > 999 ) {
+  } elsif ( $synopsis_max > 999 ) {
     $spaces = 4;
-  } elsif ( $summary_max > 99 ) {
+  } elsif ( $synopsis_max > 99 ) {
     $spaces = 3;
-  } elsif ( $summary_max > 9 ) {
+  } elsif ( $synopsis_max > 9 ) {
     $spaces = 2;
   }
   my @keys;
-  @keys = keys %summary_acc;
+  @keys = keys %synopsis_acc;
   for my $ky (sort @keys) {
-    $vl = $summary_acc{$ky};
+    $vl = $synopsis_acc{$ky};
     $remaining = $spaces - length ( $vl );
     print "  $vl";
     for ( $i = 0; $i < $remaining; $i++ ) {

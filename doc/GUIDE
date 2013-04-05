@@ -1063,7 +1063,7 @@ to return an outline that shows XML structure and tag names, but without closing
     ESSN
     ...
 
-Using -summary instead of -outline produces a table of unique path counts:
+Using -synopsis instead of -outline produces a table of unique path counts:
 
   1  DocumentSummary
   1  DocumentSummary/ArticleIds
@@ -1431,7 +1431,7 @@ Command-line arguments for the EDirect functions are shown below:
     -ret
     -lbl
     -outline
-    -summary
+    -synopsis
     -pipe
 
 In addition, -email and -tool are available in all EUtils functions to override default values, -silent will suppress link failure retry messages, -verbose will print the <ENTREZ_DIRECT> field values at each step, -debug can be used to assist with debugging a script by printing the internal URL query and XML results of each step, -http get will force the use of GET instead of POST, -alias will specify a file of shortcut keywords and query strings or URL sections, and -base will specify a particular server for quality assurance testing.
