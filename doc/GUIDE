@@ -1034,7 +1034,7 @@ that can be piped through:
 
   xtract -pattern DocumentSummary -outline
 
-to return an outline that shows XML structure and tag names (but without closing tags, attributes, and content values) followed by a table of unique path counts:
+to return an outline that shows XML structure and tag names, but without closing tags, attributes, and content values:
 
   DocumentSummary
     Id
@@ -1061,22 +1061,22 @@ to return an outline that shows XML structure and tag names (but without closing
     NlmUniqueID
     ISSN
     ESSN
-    PubType
     ...
 
-  1    DocumentSummary
-  1    DocumentSummary/ArticleIds
-  5    DocumentSummary/ArticleIds/ArticleId
-  5    DocumentSummary/ArticleIds/ArticleId/IdType
-  5    DocumentSummary/ArticleIds/ArticleId/IdTypeN
-  5    DocumentSummary/ArticleIds/ArticleId/Value
-  1    DocumentSummary/Attributes
-  1    DocumentSummary/Authors
-  2    DocumentSummary/Authors/Author
-  2    DocumentSummary/Authors/Author/AuthType
-  2    DocumentSummary/Authors/Author/ClusterID
-  2    DocumentSummary/Authors/Author/Name
-  1    DocumentSummary/AvailableFromURL
+Using -summary instead of -outline produces a table of unique path counts:
+
+  1  DocumentSummary
+  1  DocumentSummary/ArticleIds
+  5  DocumentSummary/ArticleIds/ArticleId
+  5  DocumentSummary/ArticleIds/ArticleId/IdType
+  5  DocumentSummary/ArticleIds/ArticleId/IdTypeN
+  5  DocumentSummary/ArticleIds/ArticleId/Value
+  1  DocumentSummary/Attributes
+  1  DocumentSummary/Authors
+  2  DocumentSummary/Authors/Author
+  2  DocumentSummary/Authors/Author/AuthType
+  2  DocumentSummary/Authors/Author/ClusterID
+  2  DocumentSummary/Authors/Author/Name
   ...
 
 The outline view presents a clear, uncluttered picture of the XML hierarchy that is useful in designing the appropriate command for actual data extraction.  Copy and paste from the -outline output to xtract arguments (-element, -group, -match, etc.) can help avoid typographical errors.
@@ -1431,6 +1431,7 @@ Command-line arguments for the EDirect functions are shown below:
     -ret
     -lbl
     -outline
+    -summary
     -pipe
 
 In addition, -email and -tool are available in all EUtils functions to override default values, -silent will suppress link failure retry messages, -verbose will print the <ENTREZ_DIRECT> field values at each step, -debug can be used to assist with debugging a script by printing the internal URL query and XML results of each step, -http get will force the use of GET instead of POST, -alias will specify a file of shortcut keywords and query strings or URL sections, and -base will specify a particular server for quality assurance testing.
@@ -1440,7 +1441,6 @@ Efetch -format and -mode values for each database are shown below:
 
   -db            -format            -mode    Record Type
   ___            _______            _____    ___________
-
 
   (all)
                  full                        Same as native except for mesh
