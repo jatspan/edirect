@@ -44,11 +44,16 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "0.94";
+$version = "0.95";
 
 # initialize memory hash
 
 my %memory = ();
+
+# initialize summary variables
+
+my %summary_acc = ();
+my $summary_max = 0;
 
 # utility subroutines
 
@@ -442,7 +447,7 @@ sub process_flags {
 
       # all flags should be followed by at least one value
 
-      if ( $i + 1 >= $max and $val ne "-outline" ) {
+      if ( $i + 1 >= $max and $val ne "-outline" and $val ne "-summary" ) {
 
         # warn that the last flag has no value
 
@@ -456,12 +461,59 @@ sub process_flags {
       }
     }
 
-    # print summary of XML structure
+    # print outline of XML structure
 
     if ( $val eq "-outline" ) {
 
+      my $lvl = 0;
+
+      my @tokens = split (/(?<=>)(?=<)/, $line);
+      foreach $tkn (@tokens) {
+        if ( $lvl < 0 ) {
+          # ignore remainder if level drops below zero
+        } elsif ( $tkn =~ /^<.+?>.+?<\/(.+?)>$/ ) {
+          # content-containing tag
+          if ( $tkn =~ /^<(\S+).*?>.*>$/ ) {
+            $tkn = $1;
+            $lvl++;
+            for ( $i = 0; $i < $lvl; $i++ ) {
+              print "  ";
+            }
+            print "$tkn\n";
+            $lvl--;
+          }
+        } elsif ( $tkn =~ /^<.+?\/>$/ ) {
+          # self-closing token
+          if ( $tkn =~ /^<(\S+).*?\/>$/ ) {
+            $tkn = $1;
+            $lvl++;
+            for ( $i = 0; $i < $lvl; $i++ ) {
+              print "  ";
+            }
+            print "$tkn\n";
+            $lvl--;
+          }
+        } elsif ( $tkn =~ /^<[^\/]/ ) {
+          # open tag increments level
+          $lvl++;
+          if ( $tkn =~ /^<(\S+).*?>$/ ) {
+            $tkn = $1;
+            for ( $i = 0; $i < $lvl; $i++ ) {
+              print "  ";
+            }
+            print "$tkn\n";
+          }
+        } elsif ( $tkn =~ /^<\// ) {
+          # close tag decrements level
+          $lvl--;
+        }
+      }
+
+    # collect summary of XML paths, print at end
+
+    } elsif ( $val eq "-summary" ) {
+
       my @arr = ();
-      my %acc = ();
       my $lvl = 0;
 
       my @tokens = split (/(?<=>)(?=<)/, $line);
@@ -476,10 +528,6 @@ sub process_flags {
             $lvl++;
             $arr[$lvl] = $tkn;
             $record_level = $lvl;
-            for ( $i = 0; $i < $lvl; $i++ ) {
-              print "  ";
-            }
-            print "$tkn\n";
             $lvl--;
           }
         } elsif ( $tkn =~ /^<.+?\/>$/ ) {
@@ -489,10 +537,6 @@ sub process_flags {
             $lvl++;
             $arr[$lvl] = $tkn;
             $record_level = $lvl;
-            for ( $i = 0; $i < $lvl; $i++ ) {
-              print "  ";
-            }
-            print "$tkn\n";
             $lvl--;
           }
         } elsif ( $tkn =~ /^<[^\/]/ ) {
@@ -502,10 +546,6 @@ sub process_flags {
             $tkn = $1;
             $arr[$lvl] = $tkn;
             $record_level = $lvl;
-            for ( $i = 0; $i < $lvl; $i++ ) {
-              print "  ";
-            }
-            print "$tkn\n";
           }
         } elsif ( $tkn =~ /^<\// ) {
           # close tag decrements level
@@ -516,7 +556,10 @@ sub process_flags {
           my $pfx = "";
           for ( $i = 1; $i <= $record_level; $i++ ) {
             $itm = $arr[$i];
-            if ( $itm ne "?xml" and $itm ne "!DOCTYPE" ) {
+            if ( $itm ne "?xml" and
+                 $itm ne "!DOCTYPE" and
+                 $itm ne "eSummaryResult" and
+                 $itm ne "eInfoResult" ) {
               $str .= "$pfx";
               $pfx = "/";
               $str .= "$arr[$i]";
@@ -524,21 +567,15 @@ sub process_flags {
           }
           if ( $str ne "" ) {
             my $val = 0;
-            if ( exists ($acc{"$str"}) ) {
-              $val = $acc{"$str"};
+            if ( exists ($summary_acc{"$str"}) ) {
+              $val = $summary_acc{"$str"};
             }
             $val++;
-            $acc{"$str"} = $val;
+            $summary_acc{"$str"} = $val;
+            if ( $val > $summary_max ) {
+              $summary_max = $val;
+            }
           }
-        }
-      }
-      if ( scalar (keys %acc) > 0 ) {
-        print "\n";
-        my @keys;
-        @keys = keys %acc;
-        for my $ky (sort @keys) {
-          $vl = $acc{$ky};
-          print "  $vl\t$ky\n";
         }
       }
 
@@ -1155,7 +1192,7 @@ sub xtract {
   $data =~ s/ +/ /g;
   $data =~ s/> </></g;
 
-  if ( $max == 0 or ( $max == 1 and $ARGV[0] ne "-outline" )) {
+  if ( $max == 0 or ( $max == 1 and $ARGV[0] ne "-outline" and $ARGV[0] ne "-summary" )) {
 
     # no useful arguments, just print entire line of compressed XML
 
@@ -1218,6 +1255,32 @@ sub xtract {
 # execute XML extraction
 
 xtract ();
+
+# print cumulative summary of XML paths
+
+if ( scalar (keys %summary_acc) > 0 ) {
+  my $spaces = 1;
+  if ( $summary_max > 9999 ) {
+    $spaces = 5;
+  } elsif ( $summary_max > 999 ) {
+    $spaces = 4;
+  } elsif ( $summary_max > 99 ) {
+    $spaces = 3;
+  } elsif ( $summary_max > 9 ) {
+    $spaces = 2;
+  }
+  my @keys;
+  @keys = keys %summary_acc;
+  for my $ky (sort @keys) {
+    $vl = $summary_acc{$ky};
+    $remaining = $spaces - length ( $vl );
+    print "  $vl";
+    for ( $i = 0; $i < $remaining; $i++ ) {
+      print " ";
+    }
+    print "  $ky\n";
+  }
+}
 
 # close input and output files
 
