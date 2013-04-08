@@ -4,7 +4,7 @@ The Entrez Direct (EDirect) xtract function uses command-line arguments to direc
 
 Additional arguments limit exploration to specified XML regions (-group, -block, and -subset), filter by data content (-match and -avoid) or elements (-present and -absent), and customize the report presentation. Individual fields can be grouped with commas and given specific prefix, suffix, and separator characters.
 
-Inspection of the XML with -outline helps determine the appropriate arguments to employ. Tabular data can be piped to standard UNIX utilities or custom scripts for further processing. A query by specific PubMed unique identifiers:
+Tabular data can be piped to standard UNIX utilities or custom scripts for further processing. A query by specific PubMed unique identifiers:
 
   efetch -db pubmed -id 781293,2678811,6301692,8332518 -format xml | \
   xtract -pattern PubmedArticle -element "MedlineCitation/PMID" \
@@ -57,41 +57,41 @@ Setting a variable default value, by placing text in parentheses, can be used to
 
   -MLWT "(-)"
 
-The normal column-oriented output can be extensively modified to produce a custom report. A query on a gene that undergoes messenger RNA splicing:
+Visual inspection of the XML structure with the -outline argument helps determine the appropriate xtract arguments to employ.  A pubmed summary query:
 
-  efetch -db nuccore -id "GQ370762.1" -format gbc -mode xml | \
-  xtract -pattern INSDSeq -pfx ">Feature " -sfx "\n" -tab "" -first INSDSeqid \
-    -group INSDFeature -avoid "INSDFeature_key>source<" -FKEY INSDFeature_key \
-      -block INSDInterval -element INSDInterval_from INSDInterval_to \
-        INSDInterval_point INSDInterval_point "&FKEY" -FKEY "" -tab "" -lbl "\n" \
-      -block INSDQualifier -avoid ">translation<" -and ">peptide<" -pfx "\t\t\t" \
-        -sfx "\n" -tab "" -element INSDQualifier_name,INSDQualifier_value
+  esummary -db pubmed -id 16589597
 
-clears the feature key variable after its first use to generate the 5-column feature table format used for GenBank submissions:
+retrieves an XML document summary:
 
-  >Feature gb|GQ370762.1|
-  51      1474    gene
-                               gene            HBB
-                               allele          GZ
-  51      142     mRNA
-  273     495
-  1346    1474
-                               gene            HBB
-                               allele          GZ
-                               product         beta-globin
-  51      142     CDS
-  273     495
-  1346    1474
-                               gene            HBB
-                               allele          GZ
-                               codon_start     1
-                               transl_table    1
-                               product         beta-globin
-                               protein_id      ACU56984.1
-                               db_xref         GI:256028940
-  310     310     variation
-                               gene            HBB
-                               note            K43E
-                               replace         g
+  <eSummaryResult>
+    <DocumentSummarySet status="OK">
+      <DocumentSummary uid="16589597">
+        <Id>16589597</Id>
+        <PubDate>1954 Dec</PubDate>
+        <EPubDate></EPubDate>
+        <Source>Proc Natl Acad Sci U S A</Source>
+        <Authors>
+          <Author>
+            <Name>Garber ED</Name>
 
-(A location interval will have either an INSDInterval_from and INSDInterval_to pair or a single INSDInterval_point. Additional work would be required to support the 5' and 3' partial flags for features with incomplete locations.)
+that can be piped through:
+
+  xtract -pattern DocumentSummary -outline
+
+to return an outline that shows XML structure and tag names, but without closing tags, attributes, and content values:
+
+  DocumentSummary
+    Id
+    PubDate
+    EPubDate
+    Source
+    Authors
+      Author
+        Name
+        AuthType
+        ClusterID
+    LastAuthor
+    Title
+    ...
+
+The outline view presents a clear, uncluttered picture of the XML hierarchy that is useful in designing the appropriate command for actual data extraction.  Copy and paste from the -outline output to xtract arguments (-element, -group, -match, etc.) can help avoid typographical errors.
