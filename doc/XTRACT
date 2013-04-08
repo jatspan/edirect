@@ -57,7 +57,7 @@ Setting a variable default value, by placing text in parentheses, can be used to
 
   -MLWT "(-)"
 
-Visual inspection of the XML structure with the -outline argument helps determine the appropriate xtract arguments to employ.  A pubmed summary query:
+Visual inspection of the XML structure with the -outline argument helps determine the appropriate xtract arguments to employ. A pubmed summary query:
 
   esummary -db pubmed -id 16589597
 
@@ -73,6 +73,7 @@ retrieves an XML document summary:
         <Authors>
           <Author>
             <Name>Garber ED</Name>
+            ...
 
 that can be piped through:
 
@@ -94,4 +95,4 @@ to return an outline that shows XML structure and tag names, but without closing
     Title
     ...
 
-The outline view presents a clear, uncluttered picture of the XML hierarchy that is useful in designing the appropriate command for actual data extraction.  Copy and paste from the -outline output to xtract arguments (-element, -group, -match, etc.) can help avoid typographical errors.
+The outline view presents a clear, uncluttered picture of the XML hierarchy. Copy and paste from the -outline output to xtract arguments (-element, -group, -match, etc.) can help avoid typographical errors.
