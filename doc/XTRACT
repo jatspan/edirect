@@ -79,7 +79,7 @@ that can be piped through:
 
   xtract -pattern DocumentSummary -outline
 
-to return an outline that shows XML structure and tag names, but without closing tags, attributes, and content values:
+to return an outline that shows XML structure and tag names, but without closing tags, attributes, or content values:
 
   DocumentSummary
     Id
