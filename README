@@ -2,7 +2,7 @@ ENTREZ DIRECT - README
 
 Entrez Direct (EDirect) is an advanced method for accessing the NCBI's set of interconnected Entrez data domains (publication, nucleotide, protein, structure, gene, variation, expression, etc.) from a terminal window. It uses command-line arguments for the query terms and combines individual operations with UNIX pipes.
 
-EDirect also provides an easy-to-use function for extracting data from document summaries or other results that are returned in XML format. Queries can move seamlessly between EDirect commands and UNIX utilities or scripts to perform actions that cannot be accomplished entirely within Entrez.
+EDirect also provides an argument-driven function for extracting data from document summaries or other results that are returned in XML format. Queries can move seamlessly between EDirect commands and UNIX utilities or scripts to perform actions that cannot be accomplished entirely within Entrez.
 
 Instructions for using EDirect are provided in doc/ and pdf/ subdirectories within the software archive. The INTRO file presents each command separately, while the executive SUMMARY is an advanced introduction that follows a realistic research scenario. XTRACT is an E-ticket ride on the XML data extractor, and the detailed user GUIDE contains the definitive documentation of EDirect functionality.
 
