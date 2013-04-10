@@ -18,7 +18,7 @@ the "efetch" function is used for fetching records or reports in various formats
 
 EDirect commands are actually wrapper scripts that send arguments to the "edirect.pl" program.  The scripts must all be kept in the same directory.  If that directory is not in the user's "PATH", EDirect commands can be run from within that location by prefixing the program name with the "./" UNIX current directory path symbol.  Or the PATH environment variable can be temporarily adjusted to add the edirect directory by starting each terminal session with:
 
-  PATH=$PATH:$HOME/edirect
+  PATH=$PATH:$HOME/entrezdirect
 
 
 ENTREZ DIRECT FUNCTION SUMMARY
