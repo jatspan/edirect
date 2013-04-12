@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "0.95";
+$version = "0.96";
 
 # initialize memory hash
 
@@ -790,12 +790,85 @@ sub has_element {
 sub process_level {
 
   my $line = shift (@_);
+  my $chd = shift (@_);
   my @args = @{shift (@_)};
   my $tab = shift (@_);
   my $ret = shift (@_);
   my $level = shift (@_);
   my $indx = shift (@_);
   my $sclr = shift (@_);
+
+
+  # track depth level of tokens if pattern was parent/child
+
+  if ( $chd ne "" ) {
+
+    my @vals = ();
+    my $lvl = 0;
+    my $dpth = 0;
+    my $in_pat = false;
+    my @working = ();
+
+    my @tokens = split (/(?<=>)(?=<)/, $line);
+    foreach $tkn (@tokens) {
+
+      if ( $lvl < 0 ) {
+        # ignore remainder if level drops below zero
+      } elsif ( $tkn =~ /^<.+?>.+?<\/.+?>$/ ) {
+        # content-containing tag does not change level
+        if ( $in_pat ) {
+          push (@working, $tkn);
+        } elsif ( $tkn =~ /<$chd(?:\s+.+?)?>(.+?)<\/$chd>/ and $lvl < 2 ) {
+          # match to full object, push directly to final array
+          push (@vals, $tkn);
+        }
+      } elsif ( $tkn =~ /\/>$/ ) {
+        # self-closing token does not change level
+        if ( $in_pat ) {
+          push (@working, $tkn);
+        }
+      } elsif ( $tkn =~ /^<[^\/]/ ) {
+        # open tag increments level
+        if ( $in_pat ) {
+          push (@working, $tkn);
+        } elsif ( $tkn =~ /<$chd(?:\s+.+?)?>/ and $lvl < 2 ) {
+          $in_pat = true;
+          $dpth = $lvl;
+          push (@working, $tkn);
+        }
+        $lvl++;
+      } elsif ( $tkn =~ /^<\// ) {
+        # close tag decrements level
+        $lvl--;
+        if ( $in_pat ) {
+          push (@working, $tkn);
+        }
+        if ( $tkn =~ /<\/$chd>/ ) {
+          if ( $lvl <= $dpth ) {
+            $in_pat = false;
+            my $str = join ("", @working);
+            push (@vals, $str);
+            @working = ();
+          }
+        }
+      }
+    }
+    if ( scalar @working > 0 ) {
+      my $str = join ("", @working);
+      push (@vals, $str);
+      @working = ();
+    }
+
+    my $curr = 0;
+    my $totl = scalar @vals;
+    foreach $val (@vals) {
+      $curr++;
+      ( $tab, $ret ) = process_level ( $val, "", \@args, $tab, $ret, $level, $indx, $sclr );
+    }
+
+    return $tab, $ret;
+  }
+
 
   my $max = scalar @args;
 
@@ -1038,6 +1111,11 @@ sub process_level {
     if ( $tmp[$start] eq $name and $stop - $start >= 2 ) {
 
       my $pat = $tmp[$start + 1];
+      my $chd = "";
+      if ( $pat =~ /(.+)\/(.+)/ ) {
+        $pat = $1;
+        $chd = $2;
+      }
       $start += 2;
       my @group = splice (@tmp, $start, $stop - $start);
 
@@ -1048,12 +1126,17 @@ sub process_level {
       my $totl = scalar @vals;
       foreach $val (@vals) {
         $curr++;
-        ( $tab, $ret ) = process_level ( $val, \@group, $tab, $ret, $level - 1, $curr, $totl );
+        ( $tab, $ret ) = process_level ( $val, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl );
       }
 
     } elsif ( $tmp[$start] eq $capname and $stop - $start >= 2 ) {
 
       my $pat = $tmp[$start + 1];
+      my $chd = "";
+      if ( $pat =~ /(.+)\/(.+)/ ) {
+        $pat = $1;
+        $chd = $2;
+      }
       $start += 2;
       my @group = splice (@tmp, $start, $stop - $start);
 
@@ -1119,13 +1202,13 @@ sub process_level {
       my $totl = scalar @vals;
       foreach $val (@vals) {
         $curr++;
-        ( $tab, $ret ) = process_level ( $val, \@group, $tab, $ret, $level - 1, $curr, $totl );
+        ( $tab, $ret ) = process_level ( $val, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl );
       }
 
     } else {
 
       my @group = splice (@tmp, $start, $stop - $start);
-      ( $tab, $ret ) = process_level ( $line, \@group, $tab, $ret, $level - 1, $indx, $sclr );
+      ( $tab, $ret ) = process_level ( $line, "", \@group, $tab, $ret, $level - 1, $indx, $sclr );
     }
   }
 
@@ -1170,7 +1253,7 @@ sub xtract {
 
       my @tmp = @ARGV;
       %memory = ();
-      ( $tab, $ret ) = process_level ( $thisline, \@tmp, $ret, "", $initial_level, 1, 1 );
+      ( $tab, $ret ) = process_level ( $thisline, "", \@tmp, $ret, "", $initial_level, 1, 1 );
       print "$ret";
     }
 
@@ -1216,7 +1299,7 @@ sub xtract {
 
     my @args = @ARGV;
     %memory = ();
-    ( $tab, $ret ) = process_level ( $data, \@args, "", "", $initial_level, 1, 1 );
+    ( $tab, $ret ) = process_level ( $data, "", \@args, "", "", $initial_level, 1, 1 );
     print "$ret";
 
     return;
@@ -1246,7 +1329,7 @@ sub xtract {
   for ( my $idx = 0; $idx < $rpt; $idx++ ) {
     foreach $val (@vals) {
       %memory = ();
-      ( $tab, $ret ) = process_level ( $val, \@args, "", "", $initial_level, $curr, $totl );
+      ( $tab, $ret ) = process_level ( $val, "", \@args, "", "", $initial_level, $curr, $totl );
       print "$ret";
     }
   }
