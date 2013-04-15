@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "0.96";
+$version = "0.97";
 
 # initialize memory hash
 
@@ -790,6 +790,7 @@ sub has_element {
 sub process_level {
 
   my $line = shift (@_);
+  my $par = shift (@_);
   my $chd = shift (@_);
   my @args = @{shift (@_)};
   my $tab = shift (@_);
@@ -797,7 +798,74 @@ sub process_level {
   my $level = shift (@_);
   my $indx = shift (@_);
   my $sclr = shift (@_);
+  my $top = shift (@_);
 
+
+  if ( $top ) {
+    %memory = ();
+  }
+
+  # handle heterogeneous child blocks if pattern was parent/*
+
+  if ( $chd eq "*" and $par ne "" and $par ne "*" ) {
+
+    my @vals = ();
+    my $lvl = 0;
+    my $dpth = 0;
+    my $in_pat = false;
+    my @working = ();
+
+    if ( $line =~ /^<$par(?:\s+.+?)?>(.+?)<\/$par>$/ ) {
+      $line = $1;
+    }
+
+    my @tokens = split (/(?<=>)(?=<)/, $line);
+    foreach $tkn (@tokens) {
+
+      if ( $lvl < 0 ) {
+        # ignore remainder if level drops below zero
+      } elsif ( $tkn =~ /^<.+?>.+?<\/.+?>$/ ) {
+        # content-containing tag does not change level
+        if ( $lvl > 0 ) {
+          push (@working, $tkn);
+        } else {
+          # match to full object, push contents directly to final array
+          push (@vals, $tkn);
+        }
+      } elsif ( $tkn =~ /\/>$/ ) {
+        # self-closing token does not change level
+        if ( $lvl > 0 ) {
+          push (@working, $tkn);
+        } else {
+          push (@vals, $tkn);
+        }
+      } elsif ( $tkn =~ /^<[^\/]/ ) {
+        # open tag increments level
+        push (@working, $tkn);
+        $lvl++;
+      } elsif ( $tkn =~ /^<\// ) {
+        # close tag decrements level
+        push (@working, $tkn);
+        $lvl--;
+        if ( $lvl == 0 ) {
+          my $str = join ("", @working);
+          push (@vals, $str);
+          @working = ();
+        }
+      }
+    }
+    if ( scalar @working > 0 ) {
+      my $str = join ("", @working);
+      push (@vals, $str);
+      @working = ();
+    }
+
+    foreach $val (@vals) {
+      ( $tab, $ret ) = process_level ( $val, "", "", \@args, $tab, $ret, $level, $indx, $sclr, false );
+    }
+
+    return $tab, $ret;
+  }
 
   # track depth level of tokens if pattern was parent/child
 
@@ -859,11 +927,8 @@ sub process_level {
       @working = ();
     }
 
-    my $curr = 0;
-    my $totl = scalar @vals;
     foreach $val (@vals) {
-      $curr++;
-      ( $tab, $ret ) = process_level ( $val, "", \@args, $tab, $ret, $level, $indx, $sclr );
+      ( $tab, $ret ) = process_level ( $val, "", "", \@args, $tab, $ret, $level, $indx, $sclr, false );
     }
 
     return $tab, $ret;
@@ -1126,7 +1191,7 @@ sub process_level {
       my $totl = scalar @vals;
       foreach $val (@vals) {
         $curr++;
-        ( $tab, $ret ) = process_level ( $val, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl );
+        ( $tab, $ret ) = process_level ( $val, $pat, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl, false );
       }
 
     } elsif ( $tmp[$start] eq $capname and $stop - $start >= 2 ) {
@@ -1202,13 +1267,13 @@ sub process_level {
       my $totl = scalar @vals;
       foreach $val (@vals) {
         $curr++;
-        ( $tab, $ret ) = process_level ( $val, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl );
+        ( $tab, $ret ) = process_level ( $val, $pat, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl, false );
       }
 
     } else {
 
       my @group = splice (@tmp, $start, $stop - $start);
-      ( $tab, $ret ) = process_level ( $line, "", \@group, $tab, $ret, $level - 1, $indx, $sclr );
+      ( $tab, $ret ) = process_level ( $line, "", "", \@group, $tab, $ret, $level - 1, $indx, $sclr, false );
     }
   }
 
@@ -1252,8 +1317,7 @@ sub xtract {
       $thisline =~ s/> </></g;
 
       my @tmp = @ARGV;
-      %memory = ();
-      ( $tab, $ret ) = process_level ( $thisline, "", \@tmp, $ret, "", $initial_level, 1, 1 );
+      ( $tab, $ret ) = process_level ( $thisline, "", "", \@tmp, $ret, "", $initial_level, 1, 1, true );
       print "$ret";
     }
 
@@ -1298,8 +1362,7 @@ sub xtract {
     # no -pattern, process entire XML without looking for pattern
 
     my @args = @ARGV;
-    %memory = ();
-    ( $tab, $ret ) = process_level ( $data, "", \@args, "", "", $initial_level, 1, 1 );
+    ( $tab, $ret ) = process_level ( $data, "", "", \@args, "", "", $initial_level, 1, 1, true );
     print "$ret";
 
     return;
@@ -1328,8 +1391,7 @@ sub xtract {
 
   for ( my $idx = 0; $idx < $rpt; $idx++ ) {
     foreach $val (@vals) {
-      %memory = ();
-      ( $tab, $ret ) = process_level ( $val, "", \@args, "", "", $initial_level, $curr, $totl );
+      ( $tab, $ret ) = process_level ( $val, "", "", \@args, "", "", $initial_level, $curr, $totl, true );
       print "$ret";
     }
   }
