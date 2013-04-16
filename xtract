@@ -798,12 +798,7 @@ sub process_level {
   my $level = shift (@_);
   my $indx = shift (@_);
   my $sclr = shift (@_);
-  my $top = shift (@_);
 
-
-  if ( $top ) {
-    %memory = ();
-  }
 
   # handle heterogeneous child blocks if pattern was parent/*
 
@@ -861,7 +856,7 @@ sub process_level {
     }
 
     foreach $val (@vals) {
-      ( $tab, $ret ) = process_level ( $val, "", "", \@args, $tab, $ret, $level, $indx, $sclr, false );
+      ( $tab, $ret ) = process_level ( $val, "", "", \@args, $tab, $ret, $level, $indx, $sclr );
     }
 
     return $tab, $ret;
@@ -928,7 +923,7 @@ sub process_level {
     }
 
     foreach $val (@vals) {
-      ( $tab, $ret ) = process_level ( $val, "", "", \@args, $tab, $ret, $level, $indx, $sclr, false );
+      ( $tab, $ret ) = process_level ( $val, "", "", \@args, $tab, $ret, $level, $indx, $sclr );
     }
 
     return $tab, $ret;
@@ -1191,7 +1186,7 @@ sub process_level {
       my $totl = scalar @vals;
       foreach $val (@vals) {
         $curr++;
-        ( $tab, $ret ) = process_level ( $val, $pat, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl, false );
+        ( $tab, $ret ) = process_level ( $val, $pat, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl );
       }
 
     } elsif ( $tmp[$start] eq $capname and $stop - $start >= 2 ) {
@@ -1267,13 +1262,13 @@ sub process_level {
       my $totl = scalar @vals;
       foreach $val (@vals) {
         $curr++;
-        ( $tab, $ret ) = process_level ( $val, $pat, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl, false );
+        ( $tab, $ret ) = process_level ( $val, $pat, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl );
       }
 
     } else {
 
       my @group = splice (@tmp, $start, $stop - $start);
-      ( $tab, $ret ) = process_level ( $line, "", "", \@group, $tab, $ret, $level - 1, $indx, $sclr, false );
+      ( $tab, $ret ) = process_level ( $line, "", "", \@group, $tab, $ret, $level - 1, $indx, $sclr );
     }
   }
 
@@ -1317,7 +1312,8 @@ sub xtract {
       $thisline =~ s/> </></g;
 
       my @tmp = @ARGV;
-      ( $tab, $ret ) = process_level ( $thisline, "", "", \@tmp, $ret, "", $initial_level, 1, 1, true );
+      %memory = ();
+      ( $tab, $ret ) = process_level ( $thisline, "", "", \@tmp, $ret, "", $initial_level, 1, 1 );
       print "$ret";
     }
 
@@ -1362,7 +1358,8 @@ sub xtract {
     # no -pattern, process entire XML without looking for pattern
 
     my @args = @ARGV;
-    ( $tab, $ret ) = process_level ( $data, "", "", \@args, "", "", $initial_level, 1, 1, true );
+    %memory = ();
+    ( $tab, $ret ) = process_level ( $data, "", "", \@args, "", "", $initial_level, 1, 1 );
     print "$ret";
 
     return;
@@ -1396,7 +1393,8 @@ sub xtract {
 
   for ( my $idx = 0; $idx < $rpt; $idx++ ) {
     foreach $val (@vals) {
-      ( $tab, $ret ) = process_level ( $val, $ptrn, $chld, \@args, "", "", $initial_level, $curr, $totl, true );
+      %memory = ();
+      ( $tab, $ret ) = process_level ( $val, $ptrn, $chld, \@args, "", "", $initial_level, $curr, $totl );
       print "$ret";
     }
   }
