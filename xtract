@@ -1368,9 +1368,14 @@ sub xtract {
     return;
   }
 
-  # split by -pattern
+  # split by -pattern - can handle single term or parent/child (including heterogeneous parent/*)
 
-  $ptrn = $ARGV[1];
+  my $ptrn = $ARGV[1];
+  my $chld = "";
+  if ( $ptrn =~ /(.+)\/(.+)/ ) {
+	$ptrn = $1;
+	$chld = $2;
+  }
   @vals = ($data =~ /(<$ptrn(?:\s+.+?)?>.+?<\/$ptrn>)/g);
 
   if ( $max == 2 ) {
@@ -1391,7 +1396,7 @@ sub xtract {
 
   for ( my $idx = 0; $idx < $rpt; $idx++ ) {
     foreach $val (@vals) {
-      ( $tab, $ret ) = process_level ( $val, "", "", \@args, "", "", $initial_level, $curr, $totl, true );
+      ( $tab, $ret ) = process_level ( $val, $ptrn, $chld, \@args, "", "", $initial_level, $curr, $totl, true );
       print "$ret";
     }
   }
