@@ -800,7 +800,7 @@ sub process_level {
   my $sclr = shift (@_);
 
 
-  # handle heterogeneous child blocks if pattern was parent/*
+  # handle heterogeneous child blocks if pattern was parent/* (undocumented)
 
   if ( $chd eq "*" and $par ne "" and $par ne "*" ) {
 
@@ -862,7 +862,7 @@ sub process_level {
     return $tab, $ret;
   }
 
-  # track depth level of tokens if pattern was parent/child
+  # track depth level of tokens if pattern was parent/child (undocumented)
 
   if ( $chd ne "" ) {
 
