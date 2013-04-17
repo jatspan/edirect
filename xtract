@@ -94,6 +94,16 @@ sub process_element {
     return false;
   }
 
+  # -element "*" writes current XML object (undocumented)
+
+  if ( $val eq "*" ) {
+    print "$prev";
+    print "$pfx";
+    print "$line";
+    print "$sfx";
+    return true;
+  }
+
   my @accum = ();
 
   # commas are used to select unrelated items to show between pfx and sfx
