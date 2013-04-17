@@ -94,7 +94,7 @@ sub process_element {
     return false;
   }
 
-  # -element "*" writes current XML object (undocumented)
+  # -element "*" writes current XML object
 
   if ( $val eq "*" ) {
     print "$prev";
@@ -810,7 +810,7 @@ sub process_level {
   my $sclr = shift (@_);
 
 
-  # handle heterogeneous child blocks if pattern was parent/* (undocumented)
+  # handle heterogeneous child blocks if pattern was parent/*
 
   if ( $chd eq "*" and $par ne "" and $par ne "*" ) {
 
@@ -872,7 +872,7 @@ sub process_level {
     return $tab, $ret;
   }
 
-  # track depth level of tokens if pattern was parent/child (undocumented)
+  # track depth level of tokens if pattern was parent/child
 
   if ( $chd ne "" ) {
 
