@@ -55,6 +55,10 @@ my %memory = ();
 my %synopsis_acc = ();
 my $synopsis_max = 0;
 
+# initial level is global
+
+my $initial_level = 7;
+
 # utility subroutines
 
 sub convert_http {
@@ -818,6 +822,7 @@ sub process_level {
     my $lvl = 0;
     my $dpth = 0;
     my $in_pat = false;
+    my $pfx = "";
     my @working = ();
 
     if ( $line =~ /^<$par(?:\s+.+?)?>(.+?)<\/$par>$/ ) {
@@ -866,7 +871,12 @@ sub process_level {
     }
 
     foreach $val (@vals) {
+      print "$pfx";
       ( $tab, $ret ) = process_level ( $val, "", "", \@args, $tab, $ret, $level, $indx, $sclr );
+      if ( $level == $initial_level ) {
+        $pfx = $ret;
+        $tab = "";
+      }
     }
 
     return $tab, $ret;
@@ -880,6 +890,7 @@ sub process_level {
     my $lvl = 0;
     my $dpth = 0;
     my $in_pat = false;
+    my $pfx = "";
     my @working = ();
 
     my @tokens = split (/(?<=>)(?=<)/, $line);
@@ -933,7 +944,12 @@ sub process_level {
     }
 
     foreach $val (@vals) {
+      print "$pfx";
       ( $tab, $ret ) = process_level ( $val, "", "", \@args, $tab, $ret, $level, $indx, $sclr );
+      if ( $level == $initial_level ) {
+        $pfx = $ret;
+        $tab = "";
+      }
     }
 
     return $tab, $ret;
@@ -1306,8 +1322,6 @@ sub xtract {
   # intermediate levels (-division, -branch, -section, and -unit) kept in reserve
 
   # initial capitalized versions (-Group, -Block, etc.) use tokenized pattern matching
-
-  my $initial_level = 7;
 
   if ( $max > 2 and $ARGV[0] eq "-pipe" ) {
 
