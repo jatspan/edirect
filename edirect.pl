@@ -74,7 +74,7 @@ $esummary = "esummary.fcgi";
 
 # EDirect version number
 
-$version = "0.92";
+$version = "0.93";
 
 # utility subroutines
 
@@ -726,7 +726,7 @@ sub write_edirect {
 
   if ( $verbose ) {
     print STDERR "\n";
-    print STDERR "entdirutil";
+    print STDERR "edirutil";
 
     if ( $dbsx ne "" ) {
       print STDERR " -db $dbsx";
@@ -1297,7 +1297,7 @@ sub eftch {
           }
           print STDERR "ERROR in efetch ($from-$to / $num): $err\n";
           print STDERR "Replicate for debugging with:\n";
-          print STDERR "  entdirutil -db $dbase -web $web -key $key -count $num";
+          print STDERR "  edirutil -db $dbase -web $web -key $key -count $num";
           if ( $stpminusone > 0 ) {
             print STDERR " -step $stpminusone";
           }
@@ -1326,7 +1326,7 @@ sub eftch {
         if ( $to > $num ) {
           $to = $num;
         }
-        print STDERR "( entdirutil -db $dbase -web $web -key $key -count $num";
+        print STDERR "( edirutil -db $dbase -web $web -key $key -count $num";
         if ( $stpminusone > 0 ) {
           print STDERR " -step $stpminusone";
         }
@@ -1922,7 +1922,7 @@ sub elink {
        $err =~ "^The read request has timed out" ) {
     if ( ! $silent ) {
       print STDERR "$err\nReplicate for debugging with:\n";
-      print STDERR "  entdirutil -db $dbase -web $wb -key $ky -count $nm";
+      print STDERR "  edirutil -db $dbase -web $wb -key $ky -count $nm";
       if ( $stpminusone > 0 ) {
         print STDERR " -step $stpminusone";
       }
@@ -2506,7 +2506,7 @@ sub esmry {
           }
           print STDERR "ERROR in esummary ($from-$to / $max): $err\n";
           print STDERR "Replicate for debugging with:\n";
-          print STDERR "  entdirutil -db $dbase -web $web -key $key -count $num";
+          print STDERR "  edirutil -db $dbase -web $web -key $key -count $num";
           if ( $stpminusone > 0 ) {
             print STDERR " -step $stpminusone";
           }
@@ -2531,7 +2531,7 @@ sub esmry {
         if ( $to > $max ) {
           $to = $max;
         }
-        print STDERR "( entdirutil -db $dbase -web $web -key $key -count $num";
+        print STDERR "( edirutil -db $dbase -web $web -key $key -count $num";
         if ( $stpminusone > 0 ) {
           print STDERR " -step $stpminusone";
         }

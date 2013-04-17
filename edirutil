@@ -24,7 +24,7 @@
 #
 # ===========================================================================
 #
-# File Name:  entdirutil
+# File Name:  edirutil
 #
 # Author:  Jonathan Kans
 #
@@ -44,7 +44,7 @@ use Getopt::Long;
 use constant false => 0;
 use constant true  => 1;
 
-sub entdirutil {
+sub edirutil {
 
   my $db = "";
   my $web = "";
@@ -100,7 +100,7 @@ sub entdirutil {
   print "</ENTREZ_DIRECT>\n";
 }
 
-entdirutil ();
+edirutil ();
 
 close (STDIN);
 close (STDOUT);
