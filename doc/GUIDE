@@ -940,7 +940,7 @@ produces XML with nested Taxon objects (marked below with line references) for e
 
 Although <Taxon> on line 1 is actually closed by </Taxon> on line 6, use of "-group Taxon" to visit data between <Taxon> and </Taxon> pairs will incorrectly match it with the first </Taxon> on line 3.
 
-Xtract circumvents this artifact with an alternative search algorithm that tracks XML object depth, instead of using regular expression pattern matching, and which is triggered by capitalized versions of the exploration commands:
+Xtract circumvents the nesting artifact with an alternative search algorithm that tracks XML object depth, instead of using regular expression pattern matching.  This is selected by using capitalized versions of the exploration commands:
 
   -Division
   -Group
@@ -1005,7 +1005,7 @@ XML objects can contain a heterogeneous mix of components.  For example:
 
   efetch -db pubmed -id 21433338,17247418 -format xml
 
-results in a mixture of book and journal articles:
+returns a mixture of book and journal records:
 
   <PubmedArticleSet>
     <PubmedBookArticle>
@@ -1020,22 +1020,23 @@ results in a mixture of book and journal articles:
     </PubmedArticle>
   </PubmedArticleSet>
 
-The -pattern "parent/*" construct is used to visit the individual components, even though they have different names.  Piping to:
+The -pattern "parent/*" construct is used to visit the individual components, even though they may have different names.  Piping to:
 
   xtract -pattern "PubmedArticleSet/*" -element "*"
 
-returns the entirety of each XML component:
+separately prints the entirety of each XML component:
 
   <PubmedBookArticle><BookDocument> ... </PubmedBookData></PubmedBookArticle>
   <PubmedArticle><MedlineCitation> ... </PubmedData></PubmedArticle>
 
-Use of the "parent/child" specification can isolate objects that differ by their location in the XML hierarchy.  For example:
+
+Use of the "parent/child" specification can isolate objects of the same name that differ by their location in the XML hierarchy.  For example:
 
   efetch -db pubmed -id 21433338,17247418 -format xml | \
   xtract -pattern "PubmedArticleSet/*" \
-    -group "BookDocument/AuthorList" -tab "\n" -element "Author/LastName" \
-    -group "Book/AuthorList" -tab "\n" -element "Author/LastName" \
-    -group "Article/AuthorList" -tab "\n" -element "Author/LastName" | \
+    -group "BookDocument/AuthorList" -tab "\n" -element LastName \
+    -group "Book/AuthorList" -tab "\n" -element LastName \
+    -group "Article/AuthorList" -tab "\n" -element LastName | \
   column -s $'\t' -t
 
 writes separate lines for book/chapter authors, book editors, and article authors:
@@ -1043,6 +1044,16 @@ writes separate lines for book/chapter authors, book editors, and article author
   Fauci      Desrosiers
   Coffin     Hughes      Varmus
   Lederberg  Cavalli     Lederberg
+
+Simply exploring with individual arguments:
+
+  -group BookDocument -block AuthorList -element LastName
+
+would visit the editors (at BookDocument/Book/AuthorList) as well as the authors (at BookDocument/AuthorList), and print names in order of appearance in the XML:
+
+  Coffin  Hughes  Varmus  Fauci  Desrosiers
+
+(In this particular example the author lists could also be selected by -match to the 'Type="authors"' or 'Type="editors"' attribute text values, but exploring by "parent/child" is a general position-based solution to the problem.)
 
 
 Visual inspection of the XML structure with the -outline argument helps determine the appropriate xtract arguments to employ.  A pubmed summary query:
@@ -1105,13 +1116,6 @@ to return an outline that shows XML structure and tag names, but without closing
     NlmUniqueID
     ISSN
     ESSN
-    PubType
-      flag
-      flag
-      flag
-    RecordStatus
-    PubStatus
-    ArticleIds
     ...
 
 Using -synopsis instead of -outline produces a table of unique path counts:
@@ -1128,13 +1132,6 @@ Using -synopsis instead of -outline produces a table of unique path counts:
   2  DocumentSummary/Authors/Author/AuthType
   2  DocumentSummary/Authors/Author/ClusterID
   2  DocumentSummary/Authors/Author/Name
-  1  DocumentSummary/AvailableFromURL
-  1  DocumentSummary/BookName
-  1  DocumentSummary/BookTitle
-  1  DocumentSummary/Chapter
-  1  DocumentSummary/DocContribList
-  1  DocumentSummary/DocDate
-  1  DocumentSummary/DocType
   ...
 
 The outline view presents a clear, uncluttered picture of the XML hierarchy that is useful in designing the appropriate command for actual data extraction.  Copy and paste from the -outline output to xtract arguments (-element, -group, -match, etc.) can help avoid typographical errors.
