@@ -1003,7 +1003,7 @@ returns:
 
 XML objects can contain a heterogeneous mix of components.  For example:
 
-  efetch -db pubmed -id 23285490,17247418 -format xml
+  efetch -db pubmed -id 21433338,17247418 -format xml
 
 results in a mixture of book and journal articles:
 
@@ -1029,20 +1029,20 @@ returns the entirety of each XML component:
   <PubmedBookArticle><BookDocument> ... </PubmedBookData></PubmedBookArticle>
   <PubmedArticle><MedlineCitation> ... </PubmedData></PubmedArticle>
 
-Use of the "parent/child" construct can isolate objects that differ by their location in the XML hierarchy.  For example:
+Use of the "parent/child" specification can isolate objects that differ by their location in the XML hierarchy.  For example:
 
-  efetch -db pubmed -id 23285490,17247418 -format xml | \
+  efetch -db pubmed -id 21433338,17247418 -format xml | \
   xtract -pattern "PubmedArticleSet/*" \
     -group "BookDocument/AuthorList" -tab "\n" -element "Author/LastName" \
     -group "Book/AuthorList" -tab "\n" -element "Author/LastName" \
     -group "Article/AuthorList" -tab "\n" -element "Author/LastName" | \
   column -s $'\t' -t
 
-produces separate lines for book authors, book editors, and article authors:
+writes separate lines for book/chapter authors, book editors, and article authors:
 
-  Magoulas   El-Hattab
-  Pagon      Bird       Dolan      Stephens  Adam
-  Lederberg  Cavalli    Lederberg
+  Fauci      Desrosiers
+  Coffin     Hughes      Varmus
+  Lederberg  Cavalli     Lederberg
 
 
 Visual inspection of the XML structure with the -outline argument helps determine the appropriate xtract arguments to employ.  A pubmed summary query:
