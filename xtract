@@ -871,7 +871,10 @@ sub process_level {
     }
 
     foreach $val (@vals) {
-      print "$pfx";
+      if ( $level == $initial_level ) {
+        print "$pfx";
+        %memory = ();
+      }
       ( $tab, $ret ) = process_level ( $val, "", "", \@args, $tab, $ret, $level, $indx, $sclr );
       if ( $level == $initial_level ) {
         $pfx = $ret;
@@ -944,7 +947,10 @@ sub process_level {
     }
 
     foreach $val (@vals) {
-      print "$pfx";
+      if ( $level == $initial_level ) {
+        print "$pfx";
+        %memory = ();
+      }
       ( $tab, $ret ) = process_level ( $val, "", "", \@args, $tab, $ret, $level, $indx, $sclr );
       if ( $level == $initial_level ) {
         $pfx = $ret;
