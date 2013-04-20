@@ -480,6 +480,7 @@ sub process_flags {
     if ( $val eq "-outline" ) {
 
       my $lvl = 0;
+      my $dpth = 0;
 
       my @tokens = split (/(?<=>)(?=<)/, $line);
       foreach $tkn (@tokens) {
@@ -490,36 +491,49 @@ sub process_flags {
           if ( $tkn =~ /^<(\S+).*?>.*>$/ ) {
             $tkn = $1;
             $lvl++;
-            for ( $i = 0; $i < $lvl; $i++ ) {
+            $dpth++;
+            for ( $i = 0; $i < $dpth; $i++ ) {
               print "  ";
             }
             print "$tkn\n";
             $lvl--;
+            $dpth--;
           }
         } elsif ( $tkn =~ /^<.+?\/>$/ ) {
           # self-closing token
           if ( $tkn =~ /^<(\S+).*?\/>$/ ) {
             $tkn = $1;
             $lvl++;
-            for ( $i = 0; $i < $lvl; $i++ ) {
+            $dpth++;
+            for ( $i = 0; $i < $dpth; $i++ ) {
               print "  ";
             }
             print "$tkn\n";
             $lvl--;
+            $dpth--;
           }
         } elsif ( $tkn =~ /^<[^\/]/ ) {
           # open tag increments level
           $lvl++;
+          $dpth++;
           if ( $tkn =~ /^<(\S+).*?>$/ ) {
             $tkn = $1;
-            for ( $i = 0; $i < $lvl; $i++ ) {
-              print "  ";
+            if ( $tkn ne "?xml" and
+                 $tkn ne "!DOCTYPE" and
+                 $tkn ne "eSummaryResult" and
+                 $tkn ne "eInfoResult" ) {
+              for ( $i = 0; $i < $dpth; $i++ ) {
+                print "  ";
+              }
+              print "$tkn\n";
+            } else {
+              $dpth--;
             }
-            print "$tkn\n";
           }
         } elsif ( $tkn =~ /^<\// ) {
           # close tag decrements level
           $lvl--;
+          $dpth--;
         }
       }
 
@@ -820,7 +834,6 @@ sub process_level {
 
     my @vals = ();
     my $lvl = 0;
-    my $dpth = 0;
     my $in_pat = false;
     my $pfx = "";
     my @working = ();
@@ -1400,8 +1413,8 @@ sub xtract {
   my $ptrn = $ARGV[1];
   my $chld = "";
   if ( $ptrn =~ /(.+)\/(.+)/ ) {
-	$ptrn = $1;
-	$chld = $2;
+    $ptrn = $1;
+    $chld = $2;
   }
   @vals = ($data =~ /(<$ptrn(?:\s+.+?)?>.+?<\/$ptrn>)/g);
 
