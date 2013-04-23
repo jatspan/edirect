@@ -4,7 +4,7 @@ Entrez Direct (EDirect) is an advanced method for accessing the NCBI's set of in
 
 EDirect also provides an argument-driven function that simplifies the extraction of data from document summaries or other results that are returned in XML format. Queries can move seamlessly between EDirect commands and UNIX utilities or scripts to perform actions that cannot be accomplished entirely within Entrez.
 
-Instructions for using EDirect are provided in doc and pdf directories within the software archive. The INTRO file presents each command separately, while the executive SUMMARY is an advanced introduction that follows a realistic research scenario. XTRACT is an E-ticket ride on the XML data extractor, and the detailed user GUIDE contains the definitive documentation of EDirect functionality.
+Instructions for using EDirect are provided in doc and pdf directories within the software archive. The INTRO file presents each command separately, while the executive SUMMARY is an advanced introduction that follows a realistic research scenario. XTRACT is an E-ticket ride on the XML data extractor. The TOUR is a PubMed-centered presentation meant to get laboratory biologists and medical librarians up and running quickly, and the comprehensive user GUIDE contains the definitive documentation of EDirect functionality for power users.
 
 If you extract the archive in your home directory, you may need to enter:
 
