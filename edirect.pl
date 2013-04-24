@@ -39,6 +39,7 @@ use warnings;
 
 # usage - edirect.pl -function arguments
 
+use Encode;
 use Getopt::Long;
 use LWP::Simple;
 use LWP::UserAgent;
@@ -74,7 +75,7 @@ $esummary = "esummary.fcgi";
 
 # EDirect version number
 
-$version = "0.93";
+$version = "0.94";
 
 # utility subroutines
 
@@ -1230,6 +1231,8 @@ sub eftch {
       }
     }
 
+    Encode::from_to($$data, 'utf8', 'iso-8859-1');
+
     print $$data;
 
     return;
@@ -1348,6 +1351,8 @@ sub eftch {
         print STDERR " -start $from -stop $to )\n";
         $begin_time = $end_time;
       }
+
+      Encode::from_to($$data, 'utf8', 'iso-8859-1');
 
       print $$data;
     }
@@ -2451,6 +2456,8 @@ sub esmry {
     } else {
       $data =~ s/<DocumentSummary uid=\"(\d+)\">/<DocumentSummary uid=\"$1\"><Id>$1<\/Id>/g;
 
+      Encode::from_to($data, 'utf8', 'iso-8859-1');
+
       print "$data";
     }
 
@@ -2551,6 +2558,8 @@ sub esmry {
       }
 
       $data =~ s/<DocumentSummary uid=\"(\d+)\">/<DocumentSummary uid=\"$1\"><Id>$1<\/Id>/g;
+
+      Encode::from_to($data, 'utf8', 'iso-8859-1');
 
       print "$data";
     }
