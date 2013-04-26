@@ -1,17 +1,16 @@
 ENTREZ DIRECT - QUICK TOUR
 
-Entrez Direct (EDirect) is an advanced method for accessing the NCBI's set of interconnected data domains (publication, nucleotide, protein, structure, variation, expression, etc.) from a terminal window. Multi-step queries can be built incrementally, and functions take search terms from command-line arguments.
-
+Entrez Direct (EDirect) is an advanced method for accessing the NCBI's set of interconnected data domains (publication, nucleotide, protein, structure, variation, expression, etc.) from a terminal window. Multi-step queries can be built incrementally, and functions take search terms from command-line arguments. Record retrieval and formatting are normally the final steps in the query.
 
 ENTERING MULTI-STEP QUERIES
 
-In order to perform an Entrez search, the user need only provide the name of the database and the desired query string. For example:
+In order to begin an Entrez search, the user only needs to provide the name of the database and the desired query string. For example:
 
   esearch -db pubmed -query "capsaicin cancer pain management"
 
-constructs the appropriate Entrez Utilities (EUtils) URL from the query terms and executes the search. EDirect handles many technical details behind the scenes.
+constructs the appropriate Entrez Utilities (EUtils) URL from the query terms and executes the search. EDirect handles many technical details behind the scenes, and saves the results on the Entrez history server.
 
-The vertical bar ("|") UNIX pipe character is used to send the results to the next step. Piping the esearch output to an elink command:
+The vertical bar ("|") UNIX pipe character is used to communicate the database and history key to the next step. Piping the esearch output to an elink command:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | elink -related
 
@@ -28,7 +27,6 @@ The list of neighbors can be refined by further term searching in Entrez:
   elink -related | \
   efilter -query "conotoxin NOT morphine"
 
-
 QUALIFYING QUERIES BY INDEXED FIELD
 
 Terms can be qualified by an indexed field abbreviation (e.g., [AUTH], [JOUR], [MESH], [TITL]). Boolean operators and parentheses can also be used in the query expression for more complex searches. For example:
@@ -41,10 +39,11 @@ in pubmed or:
 
 in protein. The scripting example at the end of this document will produce a report giving the entire set of indexed fields for every Entrez database.
 
-
 EXAMINING INTERMEDIATE RESULTS
 
-A small structured XML object is passed between each command. The Count field gives the number of records returned by the previous step. A good measure of query success is a reasonable (non-zero) count value:
+EDirect navigation functions (esearch, elink, and efilter) produce a small structured XML object that is passed to the next command. Retrieval functions (efetch and esummary) read the XML values and return the designated report.
+
+The Count field in the XML intermediate gives the number of records returned by the previous step. A good measure of success is a reasonable (non-zero) value:
 
   <ENTREZ_DIRECT>
     <Db>pubmed</Db>
@@ -56,17 +55,16 @@ A small structured XML object is passed between each command. The Count field gi
 
 Checking the result count after each step can help avoid unsuccessful queries.
 
-
 READING PUBMED REPORTS
 
-Record retrieval or formatting is separate from searching. Piping to efetch:
+Piping the pubmed results to efetch and specifying the "abstract" format:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | \
   elink -related | \
   efilter -query "conotoxin NOT morphine" | \
   efetch -format abstract
 
-returns a report that can be read by a person:
+returns a set of reports that can be read by a person:
 
   1. PLoS One. 2013;8(3):e59293. doi: 10.1371/journal.pone.0059293. Epub ...
 
@@ -83,7 +81,6 @@ returns a report that can be read by a person:
   from human sympathetic neuronal tissue and thus, express a number of the Cav
   channel subtypes essential for regulation of important physiological functions,
   ...
-
 
 XML DOCUMENT SUMMARIES
 
@@ -114,18 +111,17 @@ will generate an XML document summary set:
 
 The advantage of XML is that many pieces of information are in specific locations in a well-defined data hierarchy. Assembling individual units of data that are fielded by name, such as:
 
+  <PubDate>2013</PubDate>
   <Source>PLoS One</Source>
-  ...
   <Volume>8</Volume>
   <Issue>3</Issue>
   <Pages>e59293</Pages>
 
-is much easier than parsing the units from a long, complex string:
+requires matching the same general pattern, differing only by the element name. This is much easier than parsing the units from a long, complex string:
 
   1. PLoS One. 2013;8(3):e59293 ...
 
-The disadvantage of XML is that data extraction usually requires programming. But EDirect also addresses the problem of interpreting XML data, as discussed below.
-
+The disadvantage of XML is that data extraction usually requires programming. But EDirect relies on the common pattern of XML value representation to provide a simplified approach to interpreting XML data, as discussed below.
 
 CONVERSION OF XML DATA INTO TABULAR FORM
 
@@ -137,7 +133,7 @@ Piping a document summary set to:
 
   xtract -outline
 
-will give a simplified overview of XML structure hierarchy:
+will give an overview of the XML structure hierarchy:
 
   DocumentSummarySet
     DocumentSummary
@@ -155,10 +151,9 @@ will give a simplified overview of XML structure hierarchy:
       LastAuthor
       Title
       SortTitle
-      Volume
       ...
 
-The outline can help in deciding what arguments to send to xtract, so:
+The outline can help in deciding what arguments to send to xtract. Thus:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | \
   elink -related | \
@@ -173,7 +168,6 @@ returns the PubMed identifier, first author name, and article title:
   18956616  Fürst Z   [Central and peripheral mechanisms in antinociception: ...
   12566085  Lo YK     Effect of arvanil (N-arachidonoyl-vanillyl-amine), a n ...
   ...
-
 
 INTERACTION WITH UNIX UTILITIES
 
@@ -194,7 +188,7 @@ sorts first by author name and then (for the same author) alphabetically by titl
   12566085  Lo YK      Effect of arvanil (N-arachidonoyl-vanillyl-amine), a  ...
   ...
 
-Or the title words can be extracted and sent through a series of UNIX commands:
+Alternatively, a frequency table of title words can easily be generated:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | \
   elink -related | \
@@ -204,7 +198,7 @@ Or the title words can be extracted and sent through a series of UNIX commands:
   sed 's/[^a-zA-Z0-9]/ /g' | tr 'A-Z' 'a-z' | xargs -n 1 | \
   sort | uniq -c | sort -k 1,1nr -k 2,2f
 
-that take the article titles, remove punctuation, convert capital letters to lower case, and place each word on a separate line. The words are sorted alphabetically, occurrence counts are calculated, and the final results are sorted by frequency:
+This obtains article titles, removes punctuation and accented characters, converts capital letters to lower case, and places each word on a separate line. The words are then sorted alphabetically, occurrence counts for each unique word are calculated, and the results are sorted by frequency:
 
   8 of
   7 in
@@ -213,12 +207,12 @@ that take the article titles, remove punctuation, convert capital letters to low
   4 neuroblastoma
   4 sh
   4 sy5y
+  3 and
   ...
-
 
 PUBMED ARTICLE XML RECORDS
 
-The PubmedArticle has a more detailed structure than the document summary:
+The PubmedArticle has a more detailed structure than the DocumentSummary:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | \
   elink -related | \
@@ -276,14 +270,13 @@ results in a table of all authors for each record:
   12566085  Lo      Chiang  Wu
   ...
 
-
 EXPLORATION OF SETS WITHIN XML
 
 Individual PubmedArticles can be retrieved directly by efetch:
 
   efetch -db pubmed -id 1937004 -format xml
 
-and the XML may contain a list of Medical Subject Headings (MeSH Terms):
+The resulting XML may contain a list of Medical Subject Headings (MeSH Terms):
 
   ...
   <MeshHeadingList>
@@ -298,7 +291,7 @@ and the XML may contain a list of Medical Subject Headings (MeSH Terms):
     </MeshHeading>
     ...
 
-Visiting each MeSH term with a -block statement, and customizing the output format (suppressing the trailing tab normally placed between columns and prefixing with a newline character):
+Visiting each MeSH term with a -block statement, and customizing the output format (suppressing the trailing tab and prefixing with a newline character):
 
   efetch -db pubmed -id 1937004 -format xml | \
   xtract -pattern PubmedArticle -tab "" -element "MedlineCitation/PMID" \
@@ -361,10 +354,9 @@ The MeSH term and subheading fields actually have major topic attributes:
 
 that can be selected in an -element argument as "DescriptorName@MajorTopicYN" or "QualifierName@MajorTopicYN". The user GUIDE shows how this can generate an asterisk ("*") character for a major ("starred") MeSH term or subheading.
 
-
 EXPLORING MULTIPLE XML REGIONS
 
-Multiple -block commands can be used in a single xtract command to explore different areas of the XML, and can disambiguate fields with the same name in different objects. Combining fields with commas allows them to be treated as sets, and the tab that normally separates these can be replaced with a -sep argument:
+Multiple -block statements can be used in a single xtract to explore different areas of the XML. Combining fields with commas allows them to be treated as sets, and the tab that normally separates these can be replaced with a -sep argument:
 
   efetch -db pubmed -id 781293,2678811,6301692,8332518 -format xml | \
   xtract -pattern PubmedArticle -element "MedlineCitation/PMID" \
@@ -381,7 +373,6 @@ produces a table that allows easy parsing of author names, counts the number of 
   2678811  Mortimer|Schild|Contopoulou|Kans  4  1989 Sep-Oct  1989-11-22
 
 (The PubDate object can exist either in structured or string form, but would not contain a mixture of both types, so "-element Year,Month MedlineDate" will only contribute a single column to the output.)
-
 
 SEQUENCE RECORDS IN INSDSEQ XML
 
@@ -414,7 +405,6 @@ Multiple -avoid or -match conditions are specified with -and and -or commands:
   -group INSDFeature -avoid ">proprotein<" -and ">sig_peptide<" \
     -block INSDQualifier -match ">calculated_mol_wt<" -or ">peptide<" \
 
-
 STORING COMMON PHRASES IN ALIAS FILES
 
 Frequently used, long, or complicated search phrases can be saved in a file to avoid having to retype (or copy and paste) the full text for each query. Each line of the file has a shortcut keyword, a tab character, and the expanded search term. Shortcuts are referenced by placing them in parentheses and prefixing with a pound ("#") sign. For example, given a file named "query_aliases" containing:
@@ -440,10 +430,9 @@ with the query producing:
   Science (80- )          0193-4511|Print  0193-4511|Linking
   Science                 0036-8075|Print  1095-9203|Electronic  ...
 
-
 AUTOMATION WITH SCRIPTS
 
-Taking an adventurous plunge into the world of programming, EDirect queries can be automated with shell scripts. Creative use of the "sh" and "xargs" commands can obtain the same behavior from the command line, without the need to write separate script files. For example:
+Taking an adventurous plunge into the world of programming, EDirect queries can be automated with shell scripts. And creative use of the "sh" and "xargs" commands can obtain the same behavior from the command line, without the need to write separate script files. For example:
 
   einfo -dbs | xtract -pattern DbName -element DbName | sort | \
   xargs -n 1 sh -c 'einfo -db "$0" | \
