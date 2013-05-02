@@ -42,7 +42,6 @@ use warnings;
 use Data::Dumper;
 use Encode;
 use Getopt::Long;
-use List::MoreUtils;
 use LWP::Simple;
 use LWP::UserAgent;
 use Net::hostent;
@@ -76,7 +75,7 @@ $esummary = "esummary.fcgi";
 
 # EDirect version number
 
-$version = "0.95";
+$version = "0.96";
 
 # utility subroutines
 
@@ -2229,6 +2228,7 @@ sub epost {
 
   my $combo = "";
   my $pfx = "";
+  my $loops = 0;
 
   if ( $field eq "UID" or $field eq "uid" ) {
 
@@ -2238,15 +2238,20 @@ sub epost {
 
       $combo .= $pfx . "#" . $key;
       $pfx = " OR ";
+      $loops++;
 
     } else {
 
-      my $iter = List::MoreUtils::natatime 2000, @rest;
-       while ( my @chunk = $iter->() ) {
+      while ( @rest ) {
+        my @chunk = splice(@rest, 0, 2000);
+
         $ids = join (',', @chunk);
+
         ( $web, $key ) = post_chunk ( $dbase, $web, $key, $tool, $email, $ids, "" );
+
         $combo .= $pfx . "#" . $key;
         $pfx = " OR ";
+        $loops++;
       }
     }
 
@@ -2256,9 +2261,8 @@ sub epost {
 
   } else {
 
-    my $iter = List::MoreUtils::natatime 2000, @rest;
-
-     while ( my @chunk = $iter->() ) {
+    while ( @rest ) {
+      my @chunk = splice(@rest, 0, 2000);
 
       $query = join (' OR ', @chunk);
 
@@ -2279,24 +2283,31 @@ sub epost {
 
       $combo .= $pfx . "#" . $key;
       $pfx = " OR ";
+      $loops++;
     }
   }
 
-  $url = $base . $esearch;
+  if ( $combo eq "" ) {
+    die "Failure of post to find data to load\n";
+  }
 
-  $enc = uri_escape($combo);
-  $arg = "db=$dbase&term=$enc&WebEnv=$web";
-  $arg .= "&retmax=0&usehistory=y";
+  if ( $loops > 1 ) {
+    $url = $base . $esearch;
 
-  $output = do_post ($url, $arg, $tool, $email, true);
+    $enc = uri_escape($combo);
+    $arg = "db=$dbase&term=$enc&WebEnv=$web";
+    $arg .= "&retmax=0&usehistory=y";
 
-  $web = "";
-  $key = "";
-  $err = "";
+    $output = do_post ($url, $arg, $tool, $email, true);
 
-  $web = $1 if ($output =~ /<WebEnv>(\S+)<\/WebEnv>/);
-  $key = $1 if ($output =~ /<QueryKey>(\S+)<\/QueryKey>/);
-  $err = $1 if ($output =~ /<Error>(.+?)<\/Error>/i);
+    $web = "";
+    $key = "";
+    $err = "";
+
+    $web = $1 if ($output =~ /<WebEnv>(\S+)<\/WebEnv>/);
+    $key = $1 if ($output =~ /<QueryKey>(\S+)<\/QueryKey>/);
+    $err = $1 if ($output =~ /<Error>(.+?)<\/Error>/i);
+  }
 
   ( $num, $key ) = get_count ( $dbase, $web, $key, $tool, $email );
 
