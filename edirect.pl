@@ -39,15 +39,16 @@ use warnings;
 
 # usage - edirect.pl -function arguments
 
+use Data::Dumper;
 use Encode;
 use Getopt::Long;
+use List::MoreUtils;
 use LWP::Simple;
 use LWP::UserAgent;
 use Net::hostent;
 use POSIX;
 use Time::HiRes;
 use URI::Escape;
-use Data::Dumper;
 
 # required first argument is name of function to run
 
@@ -75,7 +76,7 @@ $esummary = "esummary.fcgi";
 
 # EDirect version number
 
-$version = "0.94";
+$version = "0.95";
 
 # utility subroutines
 
@@ -2079,6 +2080,93 @@ sub entfy {
 
 # epost uploads UIDs or accessions
 
+sub post_chunk {
+
+  my $dbsx = shift (@_);
+  my $webx = shift (@_);
+  my $keyx = shift (@_);
+  my $tulx = shift (@_);
+  my $emlx = shift (@_);
+  my $uids = shift (@_);
+  my $qryx = shift (@_);
+
+  $url = $base;
+  $arg = "";
+  $wb = $webx;
+
+  if ( $uids ne "" ) {
+
+    $url .= $epost;
+
+    $arg = "db=$dbsx";
+    if ( $web ne "" ) {
+      $arg .= "&WebEnv=$webx";
+    }
+    $arg .= "&id=$uids";
+
+  } elsif ( $qryx ne "" ) {
+
+    $url .= $esearch;
+
+    $qryx = map_labels ($qryx);
+    $qryx = map_macros ($qryx);
+    $enc = uri_escape($qryx);
+
+    $arg = "db=$dbsx&term=$enc";
+    if ( $web ne "" ) {
+      $arg .= "&WebEnv=$webx";
+    }
+    $arg .= "&retmax=0&usehistory=y";
+    if ( $rldate > 0 ) {
+      $arg .= "&reldate=$rldate";
+      if ( $dttype ne "" ) {
+        $dttype = "PDAT";
+      }
+    }
+    if ( $mndate ne "" and $mxdate ne "" ) {
+      $arg .= "&mindate=$mndate&maxdate=$mxdate";
+      if ( $dttype ne "" ) {
+        $dttype = "PDAT";
+      }
+    }
+    if ( $dttype ne "" ) {
+      $arg .= "&datetype=$dttype";
+    }
+  }
+
+  $output = do_post ($url, $arg, $tulx, $emlx, true);
+
+  $webx = "";
+  $keyx = "";
+  $err = "";
+
+  $webx = $1 if ($output =~ /<WebEnv>(\S+)<\/WebEnv>/);
+  $keyx = $1 if ($output =~ /<QueryKey>(\S+)<\/QueryKey>/);
+  $err = $1 if ($output =~ /<Error>(.+?)<\/Error>/i);
+
+  if ( $err ne "" ) {
+    write_edirect ( "", "", "", "", "", $err, "", "" );
+    close (STDOUT);
+    die "ERROR in post output: $err\nURL: $arg\n\n";
+  }
+
+  if ( $webx eq "" ) {
+    die "WebEnv value not found in post output\n";
+  }
+  if ( $keyx eq "" ) {
+    die "QueryKey value not found in post output\n";
+  }
+
+  if ( $wb ne "" and $webx ne $wb ) {
+    $err = "WebEnv mismatch in post output - WebEnv1 $wb, WebEnv2 $webx";
+    write_edirect ( "", $wb, "", "", "", $err, "", "" );
+    close (STDOUT);
+    die "WebEnv value changed in post output - WebEnv1 $wb\nWebEnv2 $webx\n";
+  }
+
+  return $webx, $keyx;
+}
+
 sub epost {
 
   # ... | edirect.pl -post -db nucleotide -format uid | ...
@@ -2139,175 +2227,78 @@ sub epost {
     $field = "UID";
   }
 
+  my $combo = "";
+  my $pfx = "";
+
   if ( $field eq "UID" or $field eq "uid" ) {
 
     if ( $id ne "" ) {
 
-      $url = $base . $epost;
+      ( $web, $key ) = post_chunk ( $dbase, $web, $key, $tool, $email, $id, "" );
 
-      $arg = "db=$dbase";
-      if ( $web ne "" ) {
-        $arg .= "&WebEnv=$web";
+      $combo .= $pfx . "#" . $key;
+      $pfx = " OR ";
+
+    } else {
+
+      my $iter = List::MoreUtils::natatime 2000, @rest;
+       while ( my @chunk = $iter->() ) {
+        $ids = join (',', @chunk);
+        ( $web, $key ) = post_chunk ( $dbase, $web, $key, $tool, $email, $ids, "" );
+        $combo .= $pfx . "#" . $key;
+        $pfx = " OR ";
       }
-
-      $arg .= "&id=$id";
-
-      $output = do_post ($url, $arg, $tool, $email, true);
-
-      $web = "";
-      $key = "";
-      $err = "";
-
-      $web = $1 if ($output =~ /<WebEnv>(\S+)<\/WebEnv>/);
-      $key = $1 if ($output =~ /<QueryKey>(\S+)<\/QueryKey>/);
-      $err = $1 if ($output =~ /<Error>(.+?)<\/Error>/i);
-
-      if ( $err ne "" ) {
-        write_edirect ( "", "", "", "", "", $err, "", "" );
-        close (STDOUT);
-        die "ERROR in post output: $err\n\n";
-      }
-
-      if ( $web eq "" ) {
-        die "WebEnv value not found in post output\n";
-      }
-      if ( $key eq "" ) {
-        die "QueryKey value not found in post output\n";
-      }
-
-      ( $num, $key ) = get_count ( $dbase, $web, $key, $tool, $email );
-
-      if ( $lbl ne "" and $key ne "" ) {
-        $labels{"$lbl"} = "$key";
-      }
-
-      write_edirect ( $dbase, $web, $key, $num, $stp, $err, $tool, $email );
-
-      return;
     }
 
     if ( ! $just_num ) {
       die "Non-numeric value found in post input\n";
     }
 
-    $url = $base . $epost;
+  } else {
 
-    $arg = "db=$dbase";
-    if ( $web ne "" ) {
-      $arg .= "&WebEnv=$web";
-    }
-    $ids = join (',', @rest);
+    my $iter = List::MoreUtils::natatime 2000, @rest;
 
-    $arg .= "&id=$ids";
+     while ( my @chunk = $iter->() ) {
 
-    $output = do_post ($url, $arg, $tool, $email, true);
+      $query = join (' OR ', @chunk);
 
-    $web = "";
-    $key = "";
-    $err = "";
+      if ( $query eq "" ) {
+        die "Must pipe data into stdin\n";
+      }
 
-    $web = $1 if ($output =~ /<WebEnv>(\S+)<\/WebEnv>/);
-    $key = $1 if ($output =~ /<QueryKey>(\S+)<\/QueryKey>/);
-    $err = $1 if ($output =~ /<Error>(.+?)<\/Error>/i);
+      if ( $field eq "ACCN" or $field eq "accn" or $field eq "ACC" or $field eq "acc" ) {
+        if ( $dbase eq "nucleotide" or $dbase eq "nuccore" or $dbase eq "est" or
+             $dbase eq "gss" or $dbase eq "protein" ) {
+          $query =~ s/\./_/g;
+          $field = "ACCN";
+        }
+      }
+      $query .= " [$field]";
 
-    if ( $err ne "" ) {
-      write_edirect ( "", "", "", "", "", $err, "", "" );
-      close (STDOUT);
-      die "ERROR in post output: $err\n\n";
-    }
+      ( $web, $key ) = post_chunk ( $dbase, $web, $key, $tool, $email, "", $query );
 
-    if ( $web eq "" ) {
-      die "WebEnv value not found in post output\n";
-    }
-    if ( $key eq "" ) {
-      die "QueryKey value not found in post output\n";
-    }
-
-    ( $num, $key ) = get_count ( $dbase, $web, $key, $tool, $email );
-
-    if ( $lbl ne "" and $key ne "" ) {
-      $labels{"$lbl"} = "$key";
-    }
-
-    write_edirect ( $dbase, $web, $key, $num, $stp, $err, $tool, $email );
-
-    return;
-  }
-
-  $query = join (' OR ', @rest);
-
-  if ( $query eq "" ) {
-    die "Must pipe data into stdin\n";
-  }
-
-  if ( $field eq "ACCN" or $field eq "accn" or $field eq "ACC" or $field eq "acc" ) {
-    if ( $dbase eq "nucleotide" or $dbase eq "nuccore" or $dbase eq "est" or
-         $dbase eq "gss" or $dbase eq "protein" ) {
-      $query =~ s/\./_/g;
-      $field = "ACCN";
+      $combo .= $pfx . "#" . $key;
+      $pfx = " OR ";
     }
   }
-  $query .= " [$field]";
 
   $url = $base . $esearch;
 
-  $query = map_labels ($query);
-  $query = map_macros ($query);
-  $enc = uri_escape($query);
-  $arg = "db=$dbase&term=$enc";
-  if ( $web ne "" ) {
-    $arg .= "&WebEnv=$web";
-  }
+  $enc = uri_escape($combo);
+  $arg = "db=$dbase&term=$enc&WebEnv=$web";
   $arg .= "&retmax=0&usehistory=y";
-  if ( $rldate > 0 ) {
-    $arg .= "&reldate=$rldate";
-    if ( $dttype ne "" ) {
-      $dttype = "PDAT";
-    }
-  }
-  if ( $mndate ne "" and $mxdate ne "" ) {
-    $arg .= "&mindate=$mndate&maxdate=$mxdate";
-    if ( $dttype ne "" ) {
-      $dttype = "PDAT";
-    }
-  }
-  if ( $dttype ne "" ) {
-    $arg .= "&datetype=$dttype";
-  }
-
-  $wb = $web;
 
   $output = do_post ($url, $arg, $tool, $email, true);
 
   $web = "";
   $key = "";
-  $num = "";
   $err = "";
 
   $web = $1 if ($output =~ /<WebEnv>(\S+)<\/WebEnv>/);
   $key = $1 if ($output =~ /<QueryKey>(\S+)<\/QueryKey>/);
-  $num = $1 if ($output =~ /<Count>(\S+)<\/Count>/);
   $err = $1 if ($output =~ /<Error>(.+?)<\/Error>/i);
 
-  if ( $err ne "" ) {
-    write_edirect ( "", "", "", "", "", $err, "", "" );
-    close (STDOUT);
-    die "ERROR in post output: $err\nURL: $arg\n\n";
-  }
-
-  if ( $web eq "" ) {
-    die "WebEnv value not found in post output - WebEnv1 $wb\n";
-  }
-  if ( $key eq "" ) {
-    die "QueryKey value not found in post output - WebEnv1 $wb\n";
-  }
-
-  if ( $wb ne "" and $web ne $wb ) {
-    $err = "WebEnv mismatch in post output - WebEnv1 $wb, WebEnv2 $web";
-    write_edirect ( "", $wb, "", "", "", $err, "", "" );
-    close (STDOUT);
-    die "WebEnv value changed in post output - WebEnv1 $wb\nWebEnv2 $web\n";
-  }
+  ( $num, $key ) = get_count ( $dbase, $web, $key, $tool, $email );
 
   if ( $num eq "" ) {
     die "Count value not found in post output - WebEnv1 $web\n";
