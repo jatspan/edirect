@@ -31,7 +31,7 @@ ENTERING QUERY COMMANDS
 
 UNIX programs are run by typing the name of the program and then supplying any required or optional arguments on the command line. Argument names are letters or words that start with a dash ("-") character.
 
-In order to begin an Entrez search, the user types "esearch" and then enters the required "-db" and "-query" arguments. For example:
+In order to begin an Entrez search, the user types "esearch" and then enters the required -db and -query arguments. For example:
 
   esearch -db pubmed -query "capsaicin cancer pain management"
 
@@ -45,14 +45,16 @@ The vertical bar ("|") UNIX pipe character connects two programs, sending the ou
 
 will look up related articles (precomputed PubMed neighbors) of the initial results. (Using elink -target retrieves associated records between databases.)
 
-PLACING STEPS ON SEPARATE LINES
+SPLITTING QUERIES ONTO MULTIPLE LINES
 
 The same set of commands can be written on multiple lines with the backslash ("\") UNIX line continuation character, for improved readability and easier editing:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | \
   elink -related
 
-The list of neighbors can be refined by further term searching in Entrez:
+RESTRICTING QUERY RESULTS
+
+The current results can be refined by further term searching in Entrez:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | \
   elink -related | \
@@ -64,10 +66,10 @@ Search terms can be qualified by entering an indexed field abbreviation in brack
 
 Some indexed fields from pubmed are:
 
-  [ACCN]  Accession             [MAJR]  MeSH Major Topic
-  [AFFL]  Affiliation           [SUBH]  MeSH Subheading
-  [ALL]   All Fields            [MESH]  MeSH Terms
-  [AUTH]  Author                [WORD]  Text Word
+  [AFFL]  Affiliation           [MAJR]  MeSH Major Topic
+  [ALL]   All Fields            [SUBH]  MeSH Subheading
+  [AUTH]  Author                [MESH]  MeSH Terms
+  [FAUT]  Author - First        [WORD]  Text Word
   [PDAT]  Date - Publication    [TITL]  Title
   [FILT]  Filter                [TIAB]  Title/Abstract
   [JOUR]  Journal               [UID]   UID
@@ -108,7 +110,7 @@ The Count field in the XML intermediate gives the number of records returned by 
 
 Checking the result count after each step can help avoid unsuccessful queries.
 
-READING PUBMED REPORTS
+RETRIEVING PUBMED REPORTS
 
 Piping the query results to efetch and specifying the "abstract" format:
 
@@ -131,8 +133,6 @@ returns a set of reports that can be read by a person:
 
   SH-SY5Y human neuroblastoma cells provide a useful in vitro model to study the
   mechanisms underlying neurotransmission and nociception. These cells are derived 
-  from human sympathetic neuronal tissue and thus, express a number of the Cav
-  channel subtypes essential for regulation of important physiological functions,
   ...
 
 Using "efetch -format medline" produces a report suitable for use by common bibliographic management software packages:
@@ -340,7 +340,7 @@ results in a table of all authors for each record:
 
 (Note that -element "MedlineCitation/PMID" uses the parent/child construct to prevent picking up PMIDs that occur later in CommentsCorrections objects. The -first or -last arguments can be used instead of -element, if appropriate.)
 
-EXPLORATION OF SETS WITHIN XML
+EXPLORATION OF XML SETS
 
 Individual PubmedArticles can be retrieved directly by efetch:
 
@@ -361,7 +361,7 @@ The resulting XML may contain a list of Medical Subject Headings (MeSH Terms):
     </MeshHeading>
     ...
 
-A -block statement visits each MeSH term, and customizing the output format (changing the tab between fields to a newline character):
+A -block statement visits each individual MeSH object. Customizing the output format (by changing the tab between fields to a newline character):
 
   efetch -db pubmed -id 1937004 -format xml | \
   xtract -pattern PubmedArticle -tab "\n" -element "MedlineCitation/PMID" \
@@ -378,9 +378,9 @@ produces a list of MeSH terms, one per line, following the PubMed ID:
   Saccharomyces cerevisiae
   Saccharomyces cerevisiae Proteins
 
-NESTED EXPLORATION OF XML SUBREGIONS
+NESTED EXPLORATION OF SUBSETS WITHIN XML SETS
 
-MeSH terms can have one or more subheadings:
+MeSH terms may have one or more subheadings:
 
     ...
     <MeshHeading>
@@ -460,7 +460,7 @@ has separate sections for MeSH terms with and without subheadings, and produces:
   1937004  Saccharomyces cerevisiae           radiation effects
   1937004  Saccharomyces cerevisiae Proteins
 
-XML ATTRIBUTES
+SELECTING XML ATTRIBUTES
 
 The MeSH term and subheading fields actually have major topic attributes:
 
@@ -496,7 +496,9 @@ The results are suitable for importing into a database or spreadsheet program:
 
 EXPLORING SEPARATE XML REGIONS
 
-Multiple -block statements can be used in a single xtract to explore different areas of the XML. Combining fields with commas allows them to be treated as sets, and the tab that normally separates these can be replaced with a -sep argument:
+Multiple -block statements can be used in a single xtract to explore different areas of the XML. This limits element extraction to the desired subregion, and allows disambiguation of fields with identical names.
+
+Combining fields with commas allows them to be treated as sets. The tab that normally separates these can be replaced with a -sep argument:
 
   efetch -db pubmed -id 781293,2678811,6301692,8332518 -format xml | \
   xtract -pattern PubmedArticle -element "MedlineCitation/PMID" \
@@ -516,7 +518,9 @@ produces a table that allows easy parsing of author names, counts the number of 
 
 STORING COMMON PHRASES IN ALIAS FILES
 
-Frequently used, long, or complicated search phrases can be saved in a file to avoid having to retype (or copy and paste) the full text for each query. Each line of the file has a shortcut keyword, a tab character, and the expanded search term. Shortcuts are referenced by placing them in parentheses and prefixing with a pound ("#") sign. For example, given a file named "query_aliases" containing:
+Frequently used, long, or complicated search phrases can be saved in a file to avoid having to retype (or copy and paste) the full text for each query. Each line of the file has a shortcut keyword, a tab character, and the expanded search term. Shortcuts are referenced by placing them in parentheses and prefixing with a pound ("#") sign.
+
+For example, given a file named "query_aliases" containing:
 
   jour_filt    [MULT] AND ncbijournals [FILT]
   trans_imm    (transposition OR target) immunity
@@ -563,6 +567,7 @@ calculates the length of each mature peptide, and prints the product name and pe
   AAO33169.1  16  alpha-conotoxin GIC    GCCSHPACAGNNQHIC
   ADB43127.1  16  conotoxin Cal 5.1      DPAPCCQHPIETCCRR
   AAD31913.1  18  alpha A conotoxin Tx2  PECCSHPACNVDHPEICR
+  ADB43129.1  18  conotoxin Cal 5.2      MIQRSQCCAVKKNCCHVG
   ...
 
 (The sequence accession is captured in a variable for use with each mat_peptide in the record. Prefix substitution ensures that every peptide is shown on a separate line. This also works for multi-product precursor proteins such as proinsulin.)
@@ -573,6 +578,47 @@ Multiple -avoid or -match conditions are specified with -and and -or commands:
 
   -group INSDFeature -avoid ">proprotein<" -and ">sig_peptide<" \
     -block INSDQualifier -match ">calculated_mol_wt<" -or ">peptide<" \
+
+EXTENSIVE MODIFICATION OF TABULAR OUTPUT
+
+The normal column-oriented output can be extensively modified to produce a custom report.  A query on a gene that undergoes messenger RNA splicing:
+
+  efetch -db nuccore -id "GQ370762.1" -format gbc -mode xml | \
+  xtract -pattern INSDSeq -pfx ">Feature " -sfx "\n" -tab "" -first INSDSeqid \
+    -group INSDFeature -avoid "INSDFeature_key>source<" -FKEY INSDFeature_key \
+      -block INSDInterval -element INSDInterval_from INSDInterval_to \
+        INSDInterval_point INSDInterval_point "&FKEY" -FKEY "" -tab "" -lbl "\n" \
+      -block INSDQualifier -avoid ">translation<" -and ">peptide<" -pfx "\t\t\t" \
+        -sfx "\n" -tab "" -element INSDQualifier_name,INSDQualifier_value
+
+clears the feature key variable after its first use to generate the 5-column feature table format used for GenBank submissions:
+
+  >Feature gb|GQ370762.1|
+  51      1474    gene
+                               gene            HBB
+                               allele          GZ
+  51      142     mRNA
+  273     495
+  1346    1474
+                               gene            HBB
+                               allele          GZ
+                               product         beta-globin
+  51      142     CDS
+  273     495
+  1346    1474
+                               gene            HBB
+                               allele          GZ
+                               codon_start     1
+                               transl_table    1
+                               product         beta-globin
+                               protein_id      ACU56984.1
+                               db_xref         GI:256028940
+  310     310     variation
+                               gene            HBB
+                               note            K43E
+                               replace         g
+
+(A location interval will have either an INSDInterval_from and INSDInterval_to pair or a single INSDInterval_point.  Additional work would be required to support the 5' and 3' partial flags for features with incomplete locations.)
 
 AUTOMATION WITH SCRIPTS
 
@@ -626,6 +672,8 @@ will obtain the list of Entrez databases, and then return the abbreviations, nam
   [UID]   UID            Unique number assigned to publication
   [MDAT]  Update Date    UpdateDate
   ...
+
+AUTOMATION WITHOUT SCRIPTS
 
 Creative use of the "sh" and "xargs" commands can obtain the same behavior from the command line, without the need to write separate script files. Within the "sh" command string, the database argument passed by xargs is substituted at the "$0" variable. All of the sh commands are run separately on each database.
 
@@ -692,4 +740,4 @@ allows the desired sorting by full field name and produces results that are alph
 
 FOR MORE INFORMATION
 
-The comprehensive user GUIDE contains the definitive documentation of EDirect functionality for power users.
+The comprehensive user GUIDE contains the definitive documentation of EDirect functionality. The appendices show the entire set of command-line arguments for each program and the record formats available for each database.
