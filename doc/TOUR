@@ -31,7 +31,7 @@ ENTERING QUERY COMMANDS
 
 UNIX programs are run by typing the name of the program and then supplying any required or optional arguments on the command line. Argument names are letters or words that start with a dash ("-") character.
 
-In order to begin an Entrez search, the user types "esearch" and then enters the required -db and -query arguments. For example:
+In order to begin an Entrez search, the user types "esearch" and then enters the required -db and -query arguments. For example, the command:
 
   esearch -db pubmed -query "capsaicin cancer pain management"
 
@@ -39,7 +39,7 @@ constructs the appropriate Entrez Utilities (EUtils) URL from the query terms an
 
 CONSTRUCTING MULTI-STEP QUERIES
 
-The vertical bar ("|") UNIX pipe character connects two programs, sending the output of one to the input of the other. For EDirect functions it communicates the database and history key. Piping the esearch output to an elink command:
+The vertical bar ("|") UNIX pipe character connects two programs, sending the output of one to the input of the other. EDirect functions communicate the database, history key, and query number. Piping the esearch output to elink:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | elink -related
 
@@ -47,7 +47,7 @@ will look up related articles (precomputed PubMed neighbors) of the initial resu
 
 SPLITTING QUERIES ONTO MULTIPLE LINES
 
-The same set of commands can be written on multiple lines with the backslash ("\") UNIX line continuation character, for improved readability and easier editing:
+The same pair of commands can be written on two lines with the backslash ("\") UNIX line continuation character, for improved readability and easier editing:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | \
   elink -related
@@ -62,7 +62,7 @@ The current results can be refined by further term searching in Entrez:
 
 QUALIFYING QUERIES BY INDEXED FIELD
 
-Search terms can be qualified by entering an indexed field abbreviation in brackets. Boolean operators and parentheses can also be used in the query expression for more complex searches.
+Query terms can be qualified by entering an indexed field abbreviation in brackets. Boolean operators and parentheses can also be used in the query expression for more complex searches.
 
 Some indexed fields from pubmed are:
 
@@ -74,7 +74,7 @@ Some indexed fields from pubmed are:
   [FILT]  Filter                [TIAB]  Title/Abstract
   [JOUR]  Journal               [UID]   UID
 
-For example:
+and a fielded query looks like:
 
   "Tager H [AUTH] AND glucagon [TIAB]"
 
@@ -135,7 +135,7 @@ returns a set of reports that can be read by a person:
   mechanisms underlying neurotransmission and nociception. These cells are derived 
   ...
 
-Using "efetch -format medline" produces a report suitable for use by common bibliographic management software packages:
+Using "efetch -format medline" produces a report that can be read by common bibliographic management software packages:
 
   PMID- 23536870
   OWN - NLM
@@ -198,7 +198,7 @@ CONVERSION OF XML DATA INTO TABULAR FORM
 
 The xtract function uses command-line arguments to direct the selective conversion of XML data into a tab-delimited table. The -pattern argument divides the results into rows, while placement of data into columns is controlled by -element.
 
-Additional arguments can limit data extraction to specified regions of the XML, filter by data content, and customize the table presentation. These will be introduced in the examples that follow.
+Additional arguments can limit data extraction to specified regions of the XML (-group, -block, and -subset), filter by data content (-match and -avoid) or elements (-present and -absent), and customize the table presentation.
 
 Piping the esummary output to:
 
@@ -227,7 +227,7 @@ The outline can help in deciding what arguments to send to xtract. Thus:
   esummary | \
   xtract -pattern DocumentSummary -element Id SortFirstAuthor Title
 
-returns the PubMed identifier, first author name, and article title:
+returns the PubMed identifier (PMID), first author name, and article title:
 
   23536870  Sousa SR  Expression and Pharmacology of Endogenous Cav Channels ...
   22410003  Vetter I  Characterisation of Na(v) types endogenously expressed ...
@@ -246,7 +246,7 @@ A tab-delimited table can be processed by many UNIX utiltiies. For example:
   xtract -pattern DocumentSummary -element Id SortFirstAuthor Title | \
   sort -t $'\t' -k 2,2f -k 3,3f
 
-takes the table from the previous example and sorts first by author name and then (for multiple publications by the same author) alphabetically by title:
+takes the table from the previous example and sorts first by author name and then (if there are multiple publications by the same author) alphabetically by title:
 
   11000661  Chiang JS  New developments in cancer pain therapy.
   18956616  Fürst Z    [Central and peripheral mechanisms in antinociception ...
@@ -264,7 +264,7 @@ Alternatively, a frequency table of title words can easily be generated by passi
   sed 's/[^a-zA-Z0-9]/ /g' | tr 'A-Z' 'a-z' | xargs -n 1 | \
   sort | uniq -c | sort -k 1,1nr -k 2,2f
 
-This takes the article titles, removes punctuation and accented characters, converts capital letters to lower case, and places each word on a separate line. The words are then sorted alphabetically, occurrence counts for each unique word are calculated, and the results are sorted by frequency:
+The "sed" (stream editor) command takes the article titles and removes punctuation and accented characters, replacing them with a space and thus creating separate words. Piping to "tr" (translate) converts capital letters to lower case. The "xargs -n 1" command places each resulting word on a separate line. The words are then sorted alphabetically (by "sort"), and occurrence counts for each unique word are calculated (by "uniq"). Finally, the results are sorted by frequency:
 
   8 of
   7 in
@@ -273,14 +273,11 @@ This takes the article titles, removes punctuation and accented characters, conv
   4 neuroblastoma
   4 sh
   4 sy5y
-  3 and
-  3 receptor
-  2 a
   ...
 
 PUBMED ARTICLE XML RECORDS
 
-The PubmedArticle object has a more detailed structure than the DocumentSummary:
+The PubmedArticle object has a more detailed structure than the DocumentSummary, and is only available for records in the pubmed database:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | \
   elink -related | \
@@ -543,13 +540,28 @@ with the query producing:
   Science (80- )          0193-4511|Print  0193-4511|Linking
   Science                 0036-8075|Print  1095-9203|Electronic  ...
 
+LINKING TO SEQUENCE DATABASES
+
+Using elink with the -target argument will link to associated records in the destination database:
+
+  esearch -db pubmed -query "conotoxin AND nicotinic acetylcholine receptor" | \
+  elink -target protein
+
+Filtering can then be done using indexed fields in the protein database:
+
+  esearch -db pubmed -query "conotoxin AND nicotinic acetylcholine receptor" | \
+  elink -target protein | \
+  efilter -query "mat_peptide [FKEY]"
+
 SEQUENCE RECORDS IN INSDSEQ XML
 
 Sequences shown in GenBank or GenPept flatfile format have features that describe our current understanding of the biology encoded in that region.
 
 Sequence records can be retrieved in an XML version of the GenBank or GenPept flatfile. Feature and qualifier names are data values, not XML tags, and require -match to select the desired object. A query for snail venom mature peptides:
 
-  esearch -db protein -query "conotoxin AND mat_peptide [FKEY]" | \
+  esearch -db pubmed -query "conotoxin AND nicotinic acetylcholine receptor" | \
+  elink -target protein | \
+  efilter -query "mat_peptide [FKEY]" | \
   efetch -format gpc -mode xml | \
   xtract -pattern INSDSeq -ACCN INSDSeq_accession-version \
     -group INSDFeature -match ">mat_peptide<" \
@@ -562,12 +574,13 @@ Sequence records can be retrieved in an XML version of the GenBank or GenPept fl
 
 calculates the length of each mature peptide, and prints the product name and peptide sequence, removing redundant entries and sorting by peptide length:
 
-  ADB43130.1  15  conotoxin Cal 1a       KCCKRHHGCHPCGRK
-  ADB43131.1  15  conotoxin Cal 1b       LCCKRHHGCHPCGRT
-  AAO33169.1  16  alpha-conotoxin GIC    GCCSHPACAGNNQHIC
-  ADB43127.1  16  conotoxin Cal 5.1      DPAPCCQHPIETCCRR
-  AAD31913.1  18  alpha A conotoxin Tx2  PECCSHPACNVDHPEICR
-  ADB43129.1  18  conotoxin Cal 5.2      MIQRSQCCAVKKNCCHVG
+  AAN78127.1  12  alpha-conotoxin ImII  ACCSDRRCRWRC
+  AAN78128.1  12  alpha-conotoxin ImI   GCCSDPRCAWRC
+  AAO33169.1  16  alpha-conotoxin GIC   GCCSHPACAGNNQHIC
+  ABE27006.1  25  conotoxin p114a       FPRPRICNLACRAGIGHKYPFCHCR
+  ABE27007.1  25  conotoxin p114.1      GPGSAICNMACRLGQGHMYPFCNCN
+  ABE27008.1  25  conotoxin p114.2      GPGSAICNMACRLEHGHLYPFCHCR
+  ABE27009.1  25  conotoxin p114.3      GPGSAICNMACRLEHGHLYPFCNCD
   ...
 
 (The sequence accession is captured in a variable for use with each mat_peptide in the record. Prefix substitution ensures that every peptide is shown on a separate line. This also works for multi-product precursor proteins such as proinsulin.)
@@ -581,7 +594,7 @@ Multiple -avoid or -match conditions are specified with -and and -or commands:
 
 EXTENSIVE MODIFICATION OF TABULAR OUTPUT
 
-The normal column-oriented output can be extensively modified to produce a custom report.  A query on a gene that undergoes messenger RNA splicing:
+The normal column-oriented output can be extensively modified to produce a custom report. A query on a gene that undergoes messenger RNA splicing:
 
   efetch -db nuccore -id "GQ370762.1" -format gbc -mode xml | \
   xtract -pattern INSDSeq -pfx ">Feature " -sfx "\n" -tab "" -first INSDSeqid \
@@ -618,7 +631,7 @@ clears the feature key variable after its first use to generate the 5-column fea
                                note            K43E
                                replace         g
 
-(A location interval will have either an INSDInterval_from and INSDInterval_to pair or a single INSDInterval_point.  Additional work would be required to support the 5' and 3' partial flags for features with incomplete locations.)
+(A location interval will have either an INSDInterval_from and INSDInterval_to pair or a single INSDInterval_point. Additional work would be required to support the 5' and 3' partial flags for features with incomplete locations.)
 
 AUTOMATION WITH SCRIPTS
 
