@@ -31,7 +31,7 @@ ENTERING QUERY COMMANDS
 
 UNIX programs are run by typing the name of the program and then supplying any required or optional arguments on the command line. Argument names are letters or words that start with a dash ("-") character.
 
-In order to begin an Entrez search, the user types "esearch" and then enters the required -db and -query arguments. For example, the command:
+In order to begin an Entrez search, the user types "esearch" and then enters the required -db (database) and -query arguments. For example, the command:
 
   esearch -db pubmed -query "capsaicin cancer pain management"
 
@@ -39,13 +39,13 @@ constructs the appropriate Entrez Utilities (EUtils) URL from the query terms an
 
 CONSTRUCTING MULTI-STEP QUERIES
 
-The vertical bar ("|") UNIX pipe character connects two programs, sending the output of one to the input of the other. EDirect functions communicate the database, history key, and query number. Piping the esearch output to elink:
+The vertical bar ("|") UNIX pipe character connects two programs, sending the output of the first to the input of the second. EDirect navigation functions pass the database, history key, and query number. Piping the esearch output to elink:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | elink -related
 
 will look up related articles (precomputed PubMed neighbors) of the initial results. (Using elink -target retrieves associated records between databases.)
 
-SPLITTING QUERIES ONTO MULTIPLE LINES
+ENTERING QUERIES ON MULTIPLE LINES
 
 The same pair of commands can be written on two lines with the backslash ("\") UNIX line continuation character, for improved readability and easier editing:
 
@@ -54,7 +54,7 @@ The same pair of commands can be written on two lines with the backslash ("\") U
 
 RESTRICTING QUERY RESULTS
 
-The current results can be refined by further term searching in Entrez:
+The current results can be refined by further term searching in Entrez (useful in sequence databases for limiting BLAST neighbors to a taxonomic subset):
 
   esearch -db pubmed -query "capsaicin cancer pain management" | \
   elink -related | \
@@ -64,29 +64,28 @@ QUALIFYING QUERIES BY INDEXED FIELD
 
 Query terms can be qualified by entering an indexed field abbreviation in brackets. Boolean operators and parentheses can also be used in the query expression for more complex searches.
 
-Some indexed fields from pubmed are:
+Commonly-used fields for pubmed queries include:
 
-  [AFFL]  Affiliation           [MAJR]  MeSH Major Topic
-  [ALL]   All Fields            [SUBH]  MeSH Subheading
-  [AUTH]  Author                [MESH]  MeSH Terms
-  [FAUT]  Author - First        [WORD]  Text Word
-  [PDAT]  Date - Publication    [TITL]  Title
-  [FILT]  Filter                [TIAB]  Title/Abstract
-  [JOUR]  Journal               [UID]   UID
+  [AFFL]  Affiliation       [FILT]  Filter              [MESH]  MeSH Terms
+  [ALL]   All Fields        [JOUR]  Journal             [PTYP]  Publication Type
+  [AUTH]  Author            [LANG]  Language            [WORD]  Text Word
+  [FAUT]  Author - First    [MAJR]  MeSH Major Topic    [TITL]  Title
+  [LAUT]  Author - Last     [SUBH]  MeSH Subheading     [TIAB]  Title/Abstract
+  [PDAT]  Date - Publication                            [UID]   UID
 
 and a fielded query looks like:
 
   "Tager H [AUTH] AND glucagon [TIAB]"
 
-Indexed fields in the sequence databases include:
+Sequence databases are indexed with a different set of search fields, including:
 
-  [ACCN]  Accession      [ORGN]  Organism
-  [ALL]   All Fields     [PROP]  Properties
-  [AUTH]  Author         [PROT]  Protein Name
-  [FKEY]  Feature Key    [SLEN]  Sequence Length
-  [FILT]  Filter         [WORD]  Text Word
-  [GENE]  Gene Name      [TITL]  Title
-  [KYWD]  Keyword        [UID]   UID
+  [ACCN]  Accession       [GENE]  Gene Name            [PROT]  Protein Name
+  [ALL]   All Fields      [JOUR]  Journal              [SQID]  SeqID String
+  [AUTH]  Author          [KYWD]  Keyword              [SLEN]  Sequence Length
+  [GPRJ]  BioProject      [MLWT]  Molecular Weight     [SUBS]  Substance Name
+  [ECNO]  EC/RN Number    [ORGN]  Organism             [WORD]  Text Word
+  [FKEY]  Feature Key     [PACC]  Primary Accession    [TITL]  Title
+  [FILT]  Filter          [PROP]  Properties           [UID]   UID
 
 and a sample query in the protein database is:
 
@@ -135,7 +134,7 @@ returns a set of reports that can be read by a person:
   mechanisms underlying neurotransmission and nociception. These cells are derived 
   ...
 
-Using "efetch -format medline" produces a report that can be read by common bibliographic management software packages:
+Using "efetch -format medline" instead produces a report that can be entered into common bibliographic management software packages:
 
   PMID- 23536870
   OWN - NLM
@@ -204,7 +203,7 @@ Piping the esummary output to:
 
   xtract -outline
 
-will give an overview of the XML structure hierarchy:
+will give an indented overview of the XML structure hierarchy:
 
   DocumentSummarySet
     DocumentSummary
@@ -264,7 +263,7 @@ Alternatively, a frequency table of title words can easily be generated by passi
   sed 's/[^a-zA-Z0-9]/ /g' | tr 'A-Z' 'a-z' | xargs -n 1 | \
   sort | uniq -c | sort -k 1,1nr -k 2,2f
 
-The "sed" (stream editor) command takes the article titles and removes punctuation and accented characters, replacing them with a space and thus creating separate words. Piping to "tr" (translate) converts capital letters to lower case. The "xargs -n 1" command places each resulting word on a separate line. The words are then sorted alphabetically (by "sort"), and occurrence counts for each unique word are calculated (by "uniq"). Finally, the results are sorted by frequency:
+The "sed" (stream editor) command takes the article titles and removes punctuation and accented characters, replacing them with a space and thus creating separate words. Piping to "tr" (translate) converts capital letters to lower case. The "xargs -n 1" command places each resulting word on a separate line. The words are then sorted alphabetically (by "sort"), and occurrence counts for each unique word are calculated (by "uniq -c"). Finally, those results are sorted by frequency:
 
   8 of
   7 in
@@ -285,7 +284,7 @@ The PubmedArticle object has a more detailed structure than the DocumentSummary,
   efetch -format xml | \
   xtract -outline
 
-and more information is fielded, including author names:
+More information is fielded, including author names and the abstract:
 
   PubmedArticleSet
     PubmedArticle
@@ -377,7 +376,7 @@ produces a list of MeSH terms, one per line, following the PubMed ID:
 
 NESTED EXPLORATION OF SUBSETS WITHIN XML SETS
 
-MeSH terms may have one or more subheadings:
+MeSH terms may have zero, one, or multiple subheadings:
 
     ...
     <MeshHeading>
@@ -412,6 +411,29 @@ and results in a list of MeSH terms and associated subheadings:
   Recombination, Genetic/genetics
   Saccharomyces cerevisiae/genetics/radiation effects
   Saccharomyces cerevisiae Proteins
+
+EXPLORING SEPARATE XML REGIONS
+
+Multiple -block statements can be used in a single xtract to explore different areas of the XML. This limits element extraction to the desired subregion, and allows disambiguation of fields with identical names.
+
+Combining fields with commas allows them to be treated as sets. The tab that normally separates these can be replaced with a -sep argument:
+
+  efetch -db pubmed -id 781293,2678811,6301692,8332518 -format xml | \
+  xtract -pattern PubmedArticle -element "MedlineCitation/PMID" \
+    -block AuthorList -sep "/" -element LastName "#Author" \
+    -block PubDate -sep " " -element Year,Month MedlineDate \
+    -block DateCreated -sep "-" -element Year,Month,Day | \
+  sort -t $'\t' -k 3,3n | \
+  column -s $'\t' -t
+
+produces a table that allows easy parsing of author names, counts the number of authors present, and prints the date each record was published and the date it was entered into PubMed, sorting the results by the computed author count:
+
+  781293   Casadaban                         1  1976 Jul      1976-10-02
+  6301692  Krasnow/Cozzarelli                2  1983 Apr      1983-06-17
+  8332518  Benson/Lipman/Ostell              3  1993 Jul      1993-08-17
+  2678811  Mortimer/Schild/Contopoulou/Kans  4  1989 Sep-Oct  1989-11-22
+
+(The PubDate object can exist either in structured or string form, but would not contain a mixture of both types, so "-element Year,Month MedlineDate" will only contribute a single column to the output.)
 
 RECORDING VALUES IN VARIABLES
 
@@ -491,31 +513,9 @@ The results are suitable for importing into a database or spreadsheet program:
   1937004  Saccharomyces cerevisiae           N  radiation effects  N
   1937004  Saccharomyces cerevisiae Proteins  Y
 
-EXPLORING SEPARATE XML REGIONS
-
-Multiple -block statements can be used in a single xtract to explore different areas of the XML. This limits element extraction to the desired subregion, and allows disambiguation of fields with identical names.
-
-Combining fields with commas allows them to be treated as sets. The tab that normally separates these can be replaced with a -sep argument:
-
-  efetch -db pubmed -id 781293,2678811,6301692,8332518 -format xml | \
-  xtract -pattern PubmedArticle -element "MedlineCitation/PMID" \
-    -block AuthorList -sep "/" -element LastName "#Author" \
-    -block PubDate -sep " " -element Year,Month MedlineDate \
-    -block DateCreated -sep "-" -element Year,Month,Day | \
-  sort -t $'\t' -k 3,3n | column -s $'\t' -t
-
-produces a table that allows easy parsing of author names, counts the number of authors present, and prints the date each record was published and the date it was entered into PubMed, sorting the results by the computed author count:
-
-  781293   Casadaban                         1  1976 Jul      1976-10-02
-  6301692  Krasnow/Cozzarelli                2  1983 Apr      1983-06-17
-  8332518  Benson/Lipman/Ostell              3  1993 Jul      1993-08-17
-  2678811  Mortimer/Schild/Contopoulou/Kans  4  1989 Sep-Oct  1989-11-22
-
-(The PubDate object can exist either in structured or string form, but would not contain a mixture of both types, so "-element Year,Month MedlineDate" will only contribute a single column to the output.)
-
 STORING COMMON PHRASES IN ALIAS FILES
 
-Frequently used, long, or complicated search phrases can be saved in a file to avoid having to retype (or copy and paste) the full text for each query. Each line of the file has a shortcut keyword, a tab character, and the expanded search term. Shortcuts are referenced by placing them in parentheses and prefixing with a pound ("#") sign.
+Long or complicated search phrases can be saved in a file to avoid having to retype (or copy and paste) the full text for each query. Each line of the file has a shortcut keyword, a tab character, and the expanded search term. Shortcuts are referenced by placing them in parentheses and prefixing with a pound ("#") sign.
 
 For example, given a file named "query_aliases" containing:
 
