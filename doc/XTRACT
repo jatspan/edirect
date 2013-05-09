@@ -33,14 +33,14 @@ Sequence records can be retrieved in an XML version of the GenBank or GenPept fl
       -block INSDQualifier -match ">product<" -element INSDQualifier_value \
       -block INSDQualifier -match ">peptide<" -element INSDQualifier_value | \
   grep conotoxin | sort -t $'\t' -u -k 3,4 | \
-  sort -t $'\t' -k 2,2n | column -s $'\t' -t
+  sort -t $'\t' -k 2,2n -k 3,3f | column -s $'\t' -t
 
 calculates the length of each mature peptide, and prints the product name and peptide sequence, removing redundant entries and sorting by peptide length:
 
   ADB43130.1  15  conotoxin Cal 1a       KCCKRHHGCHPCGRK
   ADB43131.1  15  conotoxin Cal 1b       LCCKRHHGCHPCGRT
   AAO33169.1  16  alpha-conotoxin GIC    GCCSHPACAGNNQHIC
-  ADB43127.1  16  conotoxin Cal 5.1      DPAPCCQHPIETCCRR
+  ADB43128.1  16  conotoxin Cal 5.1      DPAPCCQHPIETCCRR
   AAD31913.1  18  alpha A conotoxin Tx2  PECCSHPACNVDHPEICR
   ...
 

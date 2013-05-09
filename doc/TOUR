@@ -39,7 +39,7 @@ constructs the appropriate Entrez Utilities (EUtils) URL from the query terms an
 
 CONSTRUCTING MULTI-STEP QUERIES
 
-The vertical bar ("|") UNIX pipe character connects two programs, sending the output of the first to the input of the second. (The last program in the chain simply prints its output on the terminal.) Piping the esearch output to elink:
+The vertical bar ("|") UNIX pipe character connects two programs, sending the standard output of the first to the standard input of the second. (The last program in the chain simply prints to the terminal.) Piping esearch to elink:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | elink -related
 
@@ -73,7 +73,7 @@ Commonly-used fields for pubmed queries include:
   [LAUT]  Author - Last     [SUBH]  MeSH Subheading     [TIAB]  Title/Abstract
   [PDAT]  Date - Publication                            [UID]   UID
 
-and a fielded query looks like:
+and a qualified query looks like:
 
   "Tager H [AUTH] AND glucagon [TIAB]"
 
@@ -153,7 +153,7 @@ Using "efetch -format medline" instead produces a report that can be entered int
 
 XML DOCUMENT SUMMARIES
 
-EDirect also provides a document summary in structured XML format for every record in every database. For example:
+EDirect also provides a document summary in structured XML format for every record in every database. Piping to esummary instead of efetch:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | \
   elink -related | \
@@ -553,13 +553,57 @@ Filtering can then be done using indexed fields in the protein database:
   elink -target protein | \
   efilter -query "mat_peptide [FKEY]"
 
-SEQUENCE RECORDS IN INSDSEQ XML
+RETRIEVING SEQUENCE REPORTS
 
-Sequences shown in GenBank or GenPept flatfile format have features that describe our current understanding of the biology encoded in that region.
+Nucleotide and protein sequences can be retrieved in FASTA format:
+
+  efetch -db protein -id 26418308 -format fasta
+
+which is the input format for many sequence analysis programs:
+
+  >gi|26418308|gb|AAN78128.1| alpha-conotoxin ImI precursor [Conus imperialis]
+  IVRRGCCSDPRCAWRCG
+
+Sequence records can also be retrieved in GenBank or GenPept flatfile formats:
+
+  efetch -db protein -id 26418308 -format gp
+
+which has features annotating particular regions of the sequence:
+
+  LOCUS       AAN78128                  17 aa            linear   INV 03-JAN-2003
+  DEFINITION  alpha-conotoxin ImI precursor, partial [Conus imperialis].
+  ACCESSION   AAN78128
+  VERSION     AAN78128.1  GI:26418308
+  DBSOURCE    accession AY159318.1
+  KEYWORDS    .
+  SOURCE      Conus imperialis
+    ORGANISM  Conus imperialis
+              Eukaryota; Metazoa; Lophotrochozoa; Mollusca; Gastropoda;
+              Caenogastropoda; Hypsogastropoda; Neogastropoda; Conoidea; Conidae;
+              Conus.
+  ...
+  FEATURES             Location/Qualifiers
+       source          1..17
+                       /organism="Conus imperialis"
+                       /db_xref="taxon:35631"
+       Protein         <1..17
+                       /product="alpha-conotoxin ImI precursor"
+       mat_peptide     5..16
+                       /product="alpha-conotoxin ImI"
+                       /note="the C-terminal glycine of the precursor is post
+                       translationally removed"
+       CDS             1..17
+                       /coded_by="AY159318.1:<1..54"
+                       /note="nAChR antagonist"
+  ORIGIN      
+          1 ivrrgccsdp rcawrcg
+  //
+
+SEQUENCE RECORDS IN INSDSEQ XML
 
 Sequence records can be retrieved in an XML version of the GenBank or GenPept flatfile. The query:
 
-  efetch -db protein -id 26418074 -format gpc -mode xml
+  efetch -db protein -id 26418308 -format gpc -mode xml
 
 returns INSDSeq XML, which includes structured feature table information:
 
@@ -571,32 +615,32 @@ returns INSDSeq XML, which includes structured feature table information:
       <INSDInterval>
         <INSDInterval_from>5</INSDInterval_from>
         <INSDInterval_to>16</INSDInterval_to>
-        <INSDInterval_accession>AAN78127.1</INSDInterval_accession>
+        <INSDInterval_accession>AAN78128.1</INSDInterval_accession>
       </INSDInterval>
     </INSDFeature_intervals>
     <INSDFeature_quals>
       <INSDQualifier>
         <INSDQualifier_name>product</INSDQualifier_name>
-        <INSDQualifier_value>alpha-conotoxin ImII</INSDQualifier_value>
+        <INSDQualifier_value>alpha-conotoxin ImI</INSDQualifier_value>
       </INSDQualifier>
       <INSDQualifier>
         <INSDQualifier_name>note</INSDQualifier_name>
         <INSDQualifier_value>the C-terminal glycine of the precursor is
-          post translationally removed</INSDQualifier_value>
+           post translationally removed</INSDQualifier_value>
       </INSDQualifier>
       <INSDQualifier>
         <INSDQualifier_name>calculated_mol_wt</INSDQualifier_name>
-        <INSDQualifier_value>1515</INSDQualifier_value>
+        <INSDQualifier_value>1357</INSDQualifier_value>
       </INSDQualifier>
       <INSDQualifier>
         <INSDQualifier_name>peptide</INSDQualifier_name>
-        <INSDQualifier_value>ACCSDRRCRWRC</INSDQualifier_value>
+        <INSDQualifier_value>GCCSDPRCAWRC</INSDQualifier_value>
       </INSDQualifier>
     </INSDFeature_quals>
   </INSDFeature>
   ...
 
-Feature and qualifier names are data values, not XML element tags, and require -match to select the desired object. A query for a particular class of snail venom mature peptides:
+Feature and qualifier names are data values, not XML element tags, and require -match to select the desired object. A query for snail venom mature peptides:
 
   esearch -db pubmed -query "conotoxin AND nicotinic acetylcholine receptor" | \
   elink -target protein | \
@@ -610,20 +654,20 @@ Feature and qualifier names are data values, not XML element tags, and require -
       -block INSDQualifier -match ">peptide<" -element INSDQualifier_value | \
   grep conotoxin | \
   sort -t $'\t' -u -k 3,4 | \
-  sort -t $'\t' -k 2,2n | \
+  sort -t $'\t' -k 2,2n -k 3,3f | \
   column -s $'\t' -t
 
 calculates the length of each mature peptide, and prints the product name and peptide sequence, removing redundant entries and sorting by peptide length:
 
-  AAN78127.1  12  alpha-conotoxin ImII  ACCSDRRCRWRC
   AAN78128.1  12  alpha-conotoxin ImI   GCCSDPRCAWRC
+  AAN78127.1  12  alpha-conotoxin ImII  ACCSDRRCRWRC
   AAO33169.1  16  alpha-conotoxin GIC   GCCSHPACAGNNQHIC
-  ABE27006.1  25  conotoxin p114a       FPRPRICNLACRAGIGHKYPFCHCR
+  ABE27010.1  25  conotoxin fe14.1      SPGSTICKMACRTGNGHKYPFCNCR
+  ABE27011.1  25  conotoxin fe14.2      SSGSTVCKMMCRLGYGHLYPSCGCR
   ABE27007.1  25  conotoxin p114.1      GPGSAICNMACRLGQGHMYPFCNCN
   ABE27008.1  25  conotoxin p114.2      GPGSAICNMACRLEHGHLYPFCHCR
   ABE27009.1  25  conotoxin p114.3      GPGSAICNMACRLEHGHLYPFCNCD
-  ABE27010.1  25  conotoxin fe14.1      SPGSTICKMACRTGNGHKYPFCNCR
-  ABE27011.1  25  conotoxin fe14.2      SSGSTVCKMMCRLGYGHLYPSCGCR
+  ABE27006.1  25  conotoxin p114a       FPRPRICNLACRAGIGHKYPFCHCR
   ...
 
 (The sequence accession is captured in a variable for use with each mat_peptide in the record. Prefix substitution ensures that every peptide is shown on a separate line. This also works for multi-product precursor proteins such as proinsulin.)
@@ -652,27 +696,20 @@ clears the feature key variable after its first use to generate the 5-column fea
   >Feature gb|GQ370762.1|
   51      1474    gene
                                gene            HBB
-                               allele          GZ
   51      142     mRNA
   273     495
   1346    1474
                                gene            HBB
-                               allele          GZ
                                product         beta-globin
   51      142     CDS
   273     495
   1346    1474
                                gene            HBB
-                               allele          GZ
                                codon_start     1
                                transl_table    1
                                product         beta-globin
                                protein_id      ACU56984.1
                                db_xref         GI:256028940
-  310     310     variation
-                               gene            HBB
-                               note            K43E
-                               replace         g
 
 (A location interval will have either an INSDInterval_from and INSDInterval_to pair or a single INSDInterval_point. Additional work would be required to support the 5' and 3' partial flags for features with incomplete locations.)
 
