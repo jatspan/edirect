@@ -1,4 +1,4 @@
-ENTERZ DIRECT - USER GUIDE
+ENTREZ DIRECT - USER GUIDE
 
 The Entrez Utilities (EUtils) are URL-based methods for programmatically accessing the NCBI's Entrez data.  They are easy to incorporate into Perl or UNIX shell scripts, though there is a non-trivial learning curve and an expectation of computer programming experience.  A sample EUtils URL for an ESearch query is:
 
