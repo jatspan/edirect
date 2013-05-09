@@ -664,10 +664,6 @@ calculates the length of each mature peptide, and prints the product name and pe
   AAO33169.1  16  alpha-conotoxin GIC   GCCSHPACAGNNQHIC
   ABE27010.1  25  conotoxin fe14.1      SPGSTICKMACRTGNGHKYPFCNCR
   ABE27011.1  25  conotoxin fe14.2      SSGSTVCKMMCRLGYGHLYPSCGCR
-  ABE27007.1  25  conotoxin p114.1      GPGSAICNMACRLGQGHMYPFCNCN
-  ABE27008.1  25  conotoxin p114.2      GPGSAICNMACRLEHGHLYPFCHCR
-  ABE27009.1  25  conotoxin p114.3      GPGSAICNMACRLEHGHLYPFCNCD
-  ABE27006.1  25  conotoxin p114a       FPRPRICNLACRAGIGHKYPFCHCR
   ...
 
 (The sequence accession is captured in a variable for use with each mat_peptide in the record. Prefix substitution ensures that every peptide is shown on a separate line. This also works for multi-product precursor proteins such as proinsulin.)
@@ -712,6 +708,8 @@ clears the feature key variable after its first use to generate the 5-column fea
                                db_xref         GI:256028940
 
 (A location interval will have either an INSDInterval_from and INSDInterval_to pair or a single INSDInterval_point. Additional work would be required to support the 5' and 3' partial flags for features with incomplete locations.)
+
+The actual 5-column feature table representation of any sequence record can obtained directly by using "efetch -format ft".
 
 AUTOMATION WITH SCRIPTS
 
