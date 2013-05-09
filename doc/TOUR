@@ -43,7 +43,7 @@ The vertical bar ("|") UNIX pipe character connects two programs, sending the st
 
   esearch -db pubmed -query "capsaicin cancer pain management" | elink -related
 
-will look up related articles (precomputed PubMed neighbors) of the initial results. (Using elink -target retrieves associated records between databases.)
+will look up related articles (precomputed PubMed neighbors) of the initial results. (Using "elink -target" retrieves associated records between databases.)
 
 ENTERING QUERIES ON MULTIPLE LINES
 
@@ -62,7 +62,7 @@ The current results can be refined by further term searching in Entrez (useful i
 
 QUALIFYING QUERIES BY INDEXED FIELD
 
-Query terms can be qualified by entering an indexed field abbreviation in brackets. Boolean operators and parentheses can also be used in the query expression for more complex searches.
+Query terms in esearch or efilter can be qualified by entering an indexed field abbreviation in brackets. Boolean operators and parentheses can also be used in the query expression for more complex searches.
 
 Commonly-used fields for pubmed queries include:
 
@@ -197,7 +197,7 @@ CONVERSION OF XML DATA INTO TABULAR FORM
 
 The xtract function uses command-line arguments to direct the selective conversion of XML data into a tab-delimited table. The -pattern argument divides the results into rows, while placement of data into columns is controlled by -element.
 
-Additional arguments can limit data extraction to specified regions of the XML (-group, -block, and -subset), filter by data content (-match and -avoid) or elements (-present and -absent), and customize the table presentation.
+Additional arguments can limit data extraction to specified regions of the XML (-group, -block, and -subset), filter by data content (-match and -avoid) or element names (-present and -absent), and customize the table presentation.
 
 Piping the esummary output to:
 
@@ -687,7 +687,7 @@ The normal column-oriented output can be extensively modified to produce a custo
       -block INSDQualifier -avoid ">translation<" -and ">peptide<" -pfx "\t\t\t" \
         -sfx "\n" -tab "" -element INSDQualifier_name,INSDQualifier_value
 
-clears the feature key variable after its first use to generate the 5-column feature table format used for GenBank submissions:
+clears the feature key variable after its first use to reproduce the 5-column feature table format used for GenBank submissions:
 
   >Feature gb|GQ370762.1|
   51      1474    gene
@@ -709,7 +709,7 @@ clears the feature key variable after its first use to generate the 5-column fea
 
 (A location interval will have either an INSDInterval_from and INSDInterval_to pair or a single INSDInterval_point. Additional work would be required to support the 5' and 3' partial flags for features with incomplete locations.)
 
-The actual 5-column feature table representation of any sequence record can obtained directly by using "efetch -format ft".
+The actual 5-column feature table representation of any sequence record can be obtained directly by using "efetch -format ft".
 
 AUTOMATION WITH SCRIPTS
 
@@ -783,8 +783,145 @@ allows the desired sorting by full field name and produces results that are alph
   [AUCL]  Author Cluster ID
   [BOOK]  Book
   [CDAT]  Date - Completion
+  [CRDT]  Date - Create
   ...
+
+APPENDICES
+
+Common command-line arguments for the EDirect functions are shown below:
+
+  esearch
+
+    -db  -query
+
+  elink
+
+    -db  -id  -target  -name  -related  -batch
+
+  efilter
+
+    -query
+
+  esummary
+
+    -db  -id
+
+  efetch
+
+    -db         -id        -format  -mode
+    -seq_start  -seq_stop  -strand  -complexity
+
+  xtract
+
+    -pattern  -division  -group    -branch
+    -block    -section   -subset   -unit
+    -match    -avoid     -present  -absent  -and  -or
+    -element  -first     -last
+    -pfx      -sfx       -sep      -tab     -ret  -lbl
+    -outline  -synopsis
+
+Efetch -format and -mode values for each database are shown below:
+
+  -db            -format            -mode    Record Type
+  ___            _______            _____    ___________
+
+
+  (all)
+                 full                        Same as native except for mesh
+                 uid                         Unique Identifier List
+                 url                         Entrez URL
+                 xml                         Converted to -format full -mode xml
+
+  bioproject
+                 native                      BioProject Report
+                 native             xml      RecordSet XML
+
+  biosample
+                 native                      BioSample Report
+                 native             xml      BioSampleSet XML
+
+  biosystems
+                 native             xml      Sys-set XML
+
+  gds
+                 native             xml      RecordSet XML
+                 summary                     Summary
+
+  gene
+                 gene_table                  Gene Table
+                 native                      Gene Report
+                 native             asn.1    Entrezgene ASN.1
+                 native             xml      Entrezgene-Set XML
+
+  homologene
+                 alignmentscores             Alignment Scores
+                 fasta                       FASTA
+                 homologene                  Homologene Report
+                 native                      Homologene List
+                 native             asn.1    HG-Entry ASN.1
+                 native             xml      Entrez-Homologene-Set XML
+
+  mesh
+                 full                        Full Record
+                 native             xml      RecordSet XML
+                 native                      MeSH Report
+
+  nlmcatalog
+                 native                      Full Record
+                 native             xml      NLMCatalogRecordSet XML
+
+  pmc
+                 medline                     MEDLINE
+                 native             xml      pmc-articleset XML
+
+  pubmed
+                 abstract                    Abstract
+                 medline                     MEDLINE
+                 native             asn.1    Pubmed-entry ASN.1
+                 native             xml      PubmedArticleSet XML
+
+  (sequences)
+                 acc                         Accession Number
+                 est                         EST Report
+                 fasta                       FASTA
+                 fasta              xml      TinySeq XML
+                 fasta_cds_aa                FASTA of CDS Products
+                 fasta_cds_na                FASTA of Coding Regions
+                 ft                          Feature Table
+                 gb                          GenBank Flatfile
+                 gb                 xml      GBSet XML
+                 gbc                xml      INSDSet XML
+                 gbwithparts                 GenBank with Contig Sequences
+                 gp                          GenPept Flatfile
+                 gp                 xml      GBSet XML
+                 gpc                xml      INSDSet XML
+                 gss                         GSS Report
+                 native             asn.1    Seq-entry ASN.1
+                 native             xml      Bioseq-set XML
+                 seqid                       Seq-id ASN.1
+
+  snp
+                 chr                         Chromosome Report
+                 docset                      Summary
+                 fasta                       FASTA
+                 flt                         Flat File
+                 native             asn.1    Rs ASN.1
+                 native             xml      ExchangeSet XML
+                 rsr                         RS Cluster Report
+                 ssexemplar                  SS Exemplar List
+
+  sra
+                 native             xml      EXPERIMENT_PACKAGE_SET XML
+
+  structure
+                 mmdb                        Ncbi-mime-asn1 strucseq ASN.1
+                 native                      MMDB Report
+                 native             xml      RecordSet XML
+
+  taxonomy
+                 native                      Taxonomy List
+                 native             xml      TaxaSet XML
 
 FOR MORE INFORMATION
 
-The comprehensive user GUIDE contains the definitive documentation of EDirect functionality. The appendices show the entire set of command-line arguments for each program and the record formats available for each database.
+The comprehensive user GUIDE contains the definitive documentation of EDirect functionality.
