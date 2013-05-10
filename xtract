@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "0.97";
+$version = "0.98";
 
 # initialize memory hash
 
@@ -175,7 +175,7 @@ sub process_element {
       } elsif ( $itm eq "SINGLE" and $sclr == 1 ) {
         push (@working, $dec);
 
-      } elsif ( $itm eq "HEAD"  and $indx == 1 and $sclr > 1 ) {
+      } elsif ( $itm eq "HEAD" and $indx == 1 and $sclr > 1 ) {
         push (@working, $dec);
       } elsif ( $itm eq "INNER" and $indx > 1 and $indx < $sclr ) {
         push (@working, $dec);
@@ -763,7 +763,7 @@ sub has_content {
     } elsif ( $str eq "SINGLE" and $sclr == 1 ) {
       return true;
 
-    } elsif ( $str eq "HEAD"  and $indx == 1 and $sclr > 1 ) {
+    } elsif ( $str eq "HEAD" and $indx == 1 and $sclr > 1 ) {
       return true;
     } elsif ( $str eq "INNER" and $indx > 1 and $indx < $sclr ) {
       return true;
@@ -978,12 +978,51 @@ sub process_level {
   my $max = scalar @args;
 
 
+  # -start/-finish/-even/-odd command filters by position
+
+  if ( $max > 1 ) {
+
+    if ( $args[0] eq "-start" ) {
+
+      if ( $indx > 1 ) {
+        return $tab, $ret;
+      }
+      $max--;
+      @args = splice (@args, 1, $max);
+
+    } elsif ( $args[0] eq "-finish" ) {
+
+      if ( $indx < $sclr ) {
+        return $tab, $ret;
+      }
+      $max--;
+      @args = splice (@args, 1, $max);
+
+    } elsif ( $args[0] eq "-even" ) {
+
+      if ( ( $indx % 2) == 1 ) {
+        return $tab, $ret;
+      }
+      $max--;
+      @args = splice (@args, 1, $max);
+
+    } elsif ( $args[0] eq "-odd" ) {
+
+      if ( ( $indx % 2) == 0 ) {
+        return $tab, $ret;
+      }
+      $max--;
+      @args = splice (@args, 1, $max);
+    }
+  }
+
+
   # -trim before -match/-present/-avoid/-absent removes first XML tag
 
   while ( $max > 1 and $args[0] eq "-trim" ) {
 
-    @args = splice (@args, 1, $max - 1);
     $max--;
+    @args = splice (@args, 1, $max);
 
     if ( $line =~ /^<.+?>(.+)$/ ) {
       $line = $1;
@@ -1147,8 +1186,8 @@ sub process_level {
 
   while ( $max > 1 and $args[0] eq "-trim" ) {
 
-    @args = splice (@args, 1, $max - 1);
     $max--;
+    @args = splice (@args, 1, $max);
 
     if ( $line =~ /^<.+?>(.+)$/ ) {
       $line = $1;
