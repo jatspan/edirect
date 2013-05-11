@@ -163,7 +163,7 @@ sub process_element {
 
       $dec = convert_http($rep);
 
-      # first and last elements are always present, same for a one-element list
+      # first and last elements are always present, and are the same for a one-element list
 
       if ( $itm eq "FIRST" and $indx == 1 ) {
         push (@working, $dec);
@@ -751,7 +751,7 @@ sub has_content {
   if ( $str =~ /^\?([A-Z]+)/ ) {
     $str = $1;
 
-    # first and last elements are always present, same for a one-element list
+    # first and last elements are always present, and are the same for a one-element list
 
     if ( $str eq "FIRST" and $indx == 1 ) {
       return true;
@@ -978,41 +978,44 @@ sub process_level {
   my $max = scalar @args;
 
 
-  # -start/-finish/-even/-odd command filters by position
+  # -position command filters by object position in list (undocumented)
 
-  if ( $max > 1 ) {
+  if ( $max > 2 and $args[0] eq "-position" ) {
 
-    if ( $args[0] eq "-start" ) {
+    my $pstn = $args[1];
+    $max -= 2;
+    @args = splice (@args, 2, $max);
 
-      if ( $indx > 1 ) {
-        return $tab, $ret;
-      }
-      $max--;
-      @args = splice (@args, 1, $max);
+    # first and last elements are always present, and are the same for a one-element list
 
-    } elsif ( $args[0] eq "-finish" ) {
+    if ( $pstn eq "first" and  $indx > 1 ) {
+      return $tab, $ret;
+    } elsif ( $pstn eq "last" and $indx < $sclr ) {
+      return $tab, $ret;
 
-      if ( $indx < $sclr ) {
-        return $tab, $ret;
-      }
-      $max--;
-      @args = splice (@args, 1, $max);
+    # single, head, inner, tail are mutually exclusive situations
 
-    } elsif ( $args[0] eq "-even" ) {
+    } elsif ( $pstn eq "single" and $sclr > 1 ) {
+      return $tab, $ret;
 
-      if ( ( $indx % 2) == 1 ) {
-        return $tab, $ret;
-      }
-      $max--;
-      @args = splice (@args, 1, $max);
+    } elsif ( $pstn eq "head" and ( $indx > 1 or $sclr == 1 ) ) {
+      return $tab, $ret;
+    } elsif ( $pstn eq "inner" and ( $indx == 1 or $indx == $sclr ) ) {
+      return $tab, $ret;
+    } elsif ( $pstn eq "tail" and ( $indx < $sclr or $sclr == 1 ) ) {
+      return $tab, $ret;
 
-    } elsif ( $args[0] eq "-odd" ) {
+    # single and multiple are mutually exclusive situations
 
-      if ( ( $indx % 2) == 0 ) {
-        return $tab, $ret;
-      }
-      $max--;
-      @args = splice (@args, 1, $max);
+    } elsif ( $pstn eq "multiple" and $sclr == 1 ) {
+      return $tab, $ret;
+
+    # even and odd are based only on index value, not list length
+
+    } elsif ( $pstn eq "even" and ( $indx % 2) == 1 ) {
+      return $tab, $ret;
+    } elsif ( $pstn eq "odd" and ( $indx % 2) == 0 ) {
+      return $tab, $ret;
     }
   }
 
@@ -1039,8 +1042,8 @@ sub process_level {
     my $prevbool = "";
 
     my $mtch = $args[1];
-    @args = splice (@args, 2, $max - 2);
     $max -= 2;
+    @args = splice (@args, 2, $max);
 
     if ( has_content ( $line, $mtch, $indx, $sclr )) {
       $observed++;
@@ -1061,8 +1064,8 @@ sub process_level {
       }
 
       $mtch = $args[1];
-      @args = splice (@args, 2, $max - 2);
       $max -= 2;
+      @args = splice (@args, 2, $max);
 
       if ( has_content ( $line, $mtch, $indx, $sclr )) {
         $observed++;
@@ -1083,8 +1086,8 @@ sub process_level {
     my $prevbool = "";
 
     my $mtch = $args[1];
-    @args = splice (@args, 2, $max - 2);
     $max -= 2;
+    @args = splice (@args, 2, $max);
 
     if ( has_element ( $line, $mtch )) {
       $observed++;
@@ -1105,8 +1108,8 @@ sub process_level {
       }
 
       $mtch = $args[1];
-      @args = splice (@args, 2, $max - 2);
       $max -= 2;
+      @args = splice (@args, 2, $max);
 
       if ( has_element ( $line, $mtch )) {
         $observed++;
@@ -1124,8 +1127,8 @@ sub process_level {
   if ( $max > 2 and $args[0] eq "-avoid" ) {
 
     my $skip = $args[1];
-    @args = splice (@args, 2, $max - 2);
     $max -= 2;
+    @args = splice (@args, 2, $max);
 
     if ( has_content ( $line, $skip, $indx, $sclr )) {
       return $tab, $ret;
@@ -1136,8 +1139,8 @@ sub process_level {
     while ( $max > 2 and $args[0] eq "-and" ) {
 
       $skip = $args[1];
-      @args = splice (@args, 2, $max - 2);
       $max -= 2;
+      @args = splice (@args, 2, $max);
 
       if ( has_content ( $line, $skip, $indx, $sclr )) {
         return $tab, $ret;
@@ -1155,8 +1158,8 @@ sub process_level {
   if ( $max > 2 and $args[0] eq "-absent" ) {
 
     my $skip = $args[1];
-    @args = splice (@args, 2, $max - 2);
     $max -= 2;
+    @args = splice (@args, 2, $max);
 
     if ( has_element ( $line, $skip )) {
       return $tab, $ret;
@@ -1167,8 +1170,8 @@ sub process_level {
     while ( $max > 2 and $args[0] eq "-and" ) {
 
       $skip = $args[1];
-      @args = splice (@args, 2, $max - 2);
       $max -= 2;
+      @args = splice (@args, 2, $max);
 
       if ( has_element ( $line, $skip )) {
         return $tab, $ret;
