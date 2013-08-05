@@ -131,7 +131,7 @@ returns a set of reports that can be read by a person:
   Australia.
 
   SH-SY5Y human neuroblastoma cells provide a useful in vitro model to study the
-  mechanisms underlying neurotransmission and nociception. These cells are derived 
+  mechanisms underlying neurotransmission and nociception. These cells are derived
   ...
 
 Using "efetch -format medline" instead produces a report that can be entered into common bibliographic management software packages:
@@ -595,7 +595,7 @@ which has features annotating particular regions of the sequence:
        CDS             1..17
                        /coded_by="AY159318.1:<1..54"
                        /note="nAChR antagonist"
-  ORIGIN      
+  ORIGIN
           1 ivrrgccsdp rcawrcg
   //
 
