@@ -868,7 +868,7 @@ The extraction command:
   xtract -pattern PubmedArticle \
     -block Author -element Initials,LastName \
     -block MeshHeading -element DescriptorName \
-    -subset QualifierName -element QualifierName
+      -subset QualifierName -element QualifierName
 
 could be represented as a computer program in pseudo code by:
 
@@ -974,7 +974,7 @@ Similarly, use of a capitalized -Block argument:
   efetch -db gene -id 837025,837031 -format xml | \
   xtract -pattern Entrezgene_comments \
     -Block Gene-commentary -match "Related Sequences" \
-    -element Gene-commentary_accession
+      -element Gene-commentary_accession
 
 correctly finds all appropriate accessions in Entrezgene records:
 
