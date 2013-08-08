@@ -159,6 +159,33 @@ sub do_post {
   return $rslt;
 }
 
+# uri_escape with backslash exceptions
+
+sub do_uri_escape {
+
+  $patx = shift (@_);
+
+  $rslt = "";
+
+  while ( $patx ne "" ) {
+    if ( $patx =~ /^\\\\(.+)/ ) {
+      $rslt .= "\\";
+      $patx = $1;
+    } elsif ( $patx =~ /^\\(.)(.+)/ ) {
+      $rslt .= $1;
+      $patx = $2;
+    } elsif ( $patx =~ /^(.)(.+)/ ) {
+      $rslt .= uri_escape ($1);
+      $patx = $2;
+    } elsif ( $patx =~ /^(.)/ ) {
+      $rslt .= uri_escape ($1);
+      $patx = "";
+    }
+  }
+
+  return $rslt;
+}
+
 # nquire executes an external URL query from command line arguments
 
 sub nquire {
@@ -274,7 +301,7 @@ sub nquire {
     } else {
       $pat =~ s/^\\-/-/g;
       $pat = map_macros ($pat);
-      $enc = uri_escape($pat);
+      $enc = do_uri_escape($pat);
       $arg .= $pfx . $enc;
       $pfx = ",";
       $amp = "&";
