@@ -691,21 +691,21 @@ clears the feature key variable after its first use to reproduce the 5-column fe
 
   >Feature gb|GQ370762.1|
   51      1474    gene
-                               gene            HBB
+                          gene            HBB
   51      142     mRNA
   273     495
   1346    1474
-                               gene            HBB
-                               product         beta-globin
+                          gene            HBB
+                          product         beta-globin
   51      142     CDS
   273     495
   1346    1474
-                               gene            HBB
-                               codon_start     1
-                               transl_table    1
-                               product         beta-globin
-                               protein_id      ACU56984.1
-                               db_xref         GI:256028940
+                          gene            HBB
+                          codon_start     1
+                          transl_table    1
+                          product         beta-globin
+                          protein_id      ACU56984.1
+                          db_xref         GI:256028940
 
 (A location interval will have either an INSDInterval_from and INSDInterval_to pair or a single INSDInterval_point. Additional work would be required to support the 5' and 3' partial flags for features with incomplete locations.)
 
