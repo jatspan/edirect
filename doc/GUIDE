@@ -835,30 +835,29 @@ clears the feature key variable after its first use to generate the 5-column fea
 
   >Feature gb|GQ370762.1|
   51      1474    gene
-                               gene            HBB
-                               allele          GZ
+                          gene            HBB
+                          allele          GZ
   51      142     mRNA
   273     495
   1346    1474
-                               gene            HBB
-                               allele          GZ
-                               product         beta-globin
+                          gene            HBB
+                          allele          GZ
+                          product         beta-globin
   51      142     CDS
   273     495
   1346    1474
-                               gene            HBB
-                               allele          GZ
-                               codon_start     1
-                               transl_table    1
-                               product         beta-globin
-                               protein_id      ACU56984.1
-                               db_xref         GI:256028940
-  310     310     variation
-                               gene            HBB
-                               note            K43E
-                               replace         g
+                          gene            HBB
+                          allele          GZ
+                          codon_start     1
+                          transl_table    1
+                          product         beta-globin
+                          protein_id      ACU56984.1
+                          db_xref         GI:256028940
+  ...
 
 (A location interval will have either an INSDInterval_from and INSDInterval_to pair or a single INSDInterval_point.  Additional work would be required to support the 5' and 3' partial flags for features with incomplete locations.)
+
+The actual 5-column feature table representation of any sequence record can be obtained directly by using "efetch -format ft".
 
 
 The -pattern, -group, -block, and -subset commands provide a nested hierarchy of loop organizers for exploration of XML objects.  Each pattern can contain multiple groups, each group can encompass multiple blocks, and each block can have multiple subsets.  Use of different argument names allows a linear representation of loop nesting, and provides sufficient flexibility to identify and extract arbitrary data from XML records in Entrez.
