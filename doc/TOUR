@@ -1,6 +1,6 @@
 ENTREZ DIRECT - QUICK TOUR
 
-Entrez Direct (EDirect) is an advanced method for accessing the NCBI's set of interconnected data domains (publication, nucleotide, protein, structure, variation, expression, etc.) from a terminal window. Multi-step queries can be built incrementally, and functions take search terms from command-line arguments. Record retrieval and formatting are normally the final steps in the query.
+Entrez Direct (EDirect) is an advanced method for accessing the NCBI's set of interconnected data domains (publication, sequence, structure, variation, expression, etc.) from a terminal window. Functions take search terms from command-line arguments and combine individual operations into multi-step queries. Record retrieval and formatting are normally the final steps in the query.
 
 ENTREZ DIRECT FUNCTION SUMMARY
 
@@ -153,7 +153,7 @@ Using "efetch -format medline" instead produces a report that can be entered int
 
 XML DOCUMENT SUMMARIES
 
-EDirect also provides a document summary in structured XML format for every record in every database. Piping to esummary instead of efetch:
+Entrez also provides a document summary in structured XML format for every record in every database. Piping to esummary instead of efetch:
 
   esearch -db pubmed -query "capsaicin cancer pain management" | \
   elink -related | \
@@ -717,7 +717,7 @@ Taking an adventurous plunge into the world of programming, a shell script can b
 
 In shell scripts, variables can be set to the results of a command by enclosing the statements in backtick ("`") characters. The variable name is prefixed by a dollar sign ("$") to use its value as an argument in another command. Comments start with a pound sign ("#") and are ignored. Quotation marks within quoted strings are "escaped" with a backslash ("\"). Subroutines can be used to collect common code or simplify the organization of the script.
 
-For example:
+For example, executing a script file containing:
 
   #!/bin/bash -norc
 
@@ -759,7 +759,7 @@ will obtain the list of Entrez databases, and then return the abbreviations, nam
 
 AUTOMATION WITHOUT SCRIPTS
 
-Creative use of the "sh" and "xargs" commands can obtain the same behavior from the command line, without the need to write separate script files. Within the "sh" command string, the database argument passed by xargs is substituted at the "$0" variable. All of the sh commands are run separately on each database.
+Creative use of the "sh" and "xargs" commands can obtain the same behavior from the command line, without the need to write separate script files. Within the sh command string, the database argument passed by xargs is substituted at the "$0" variable. All of the sh commands are run separately on each database.
 
 Because the sh instructions are enclosed between single quote ("'") characters (apostrophes), in-line perl commands cannot be used, nor can sort be told to use tabs (instead of tabs or spaces) to delimit columns. But a combination of xtract customization and the trick of temporarily replacing spaces with asterisks:
 
@@ -792,15 +792,15 @@ Common command-line arguments for the EDirect functions are shown below:
 
   esearch
 
-    -db  -query
+    -db  -query  -days  -datetype  -mindate  -maxdate
 
   elink
 
-    -db  -id  -target  -name  -related  -batch
+    -db  -id  -target  -name  -related  -cmd  -mode  -batch
 
   efilter
 
-    -query
+    -query  -days  -datetype  -mindate  -maxdate
 
   esummary
 
