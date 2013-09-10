@@ -1,6 +1,6 @@
 ENTREZ DIRECT - QUICK TOUR
 
-Entrez Direct (EDirect) is an advanced method for accessing the NCBI's set of interconnected data domains (publication, sequence, structure, variation, expression, etc.) from a terminal window. Functions take search terms from command-line arguments and combine individual operations into multi-step queries. Record retrieval and formatting are normally the final steps in the query.
+Entrez Direct (EDirect) is an advanced method for accessing the NCBI's set of interconnected data domains (publication, sequence, structure, variation, expression) from a terminal window. Functions take search terms from command-line arguments. Individual operations are combined into multi-step queries. Record retrieval and formatting are normally the final steps in the query.
 
 ENTREZ DIRECT FUNCTION SUMMARY
 
@@ -64,7 +64,7 @@ QUALIFYING QUERIES BY INDEXED FIELD
 
 Query terms in esearch or efilter can be qualified by entering an indexed field abbreviation in brackets. Boolean operators and parentheses can also be used in the query expression for more complex searches.
 
-Commonly-used fields for pubmed queries include:
+Commonly-used fields for PubMed queries include:
 
   [AFFL]  Affiliation       [FILT]  Filter              [MESH]  MeSH Terms
   [ALL]   All Fields        [JOUR]  Journal             [PTYP]  Publication Type
@@ -515,7 +515,7 @@ The results are suitable for importing into a database or spreadsheet program:
 
 STORING COMMON PHRASES IN ALIAS FILES
 
-Long or complicated search phrases can be saved in a file to avoid having to retype (or copy and paste) the full text for each query. Each line of the file has a shortcut keyword, a tab character, and the expanded search term. Shortcuts are referenced by placing them in parentheses and prefixing with a pound ("#") sign.
+Long or complicated search phrases can be saved in a file to avoid having to retype (or copy and paste) the full text for each query. Each line of the file has a shortcut keyword, a tab character, and the expanded search term. Shortcuts are referenced by placing them in parentheses after prefixing with a pound ("#") sign.
 
 For example, given a file named "query_aliases" containing:
 
