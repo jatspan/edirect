@@ -1,6 +1,6 @@
 ENTREZ DIRECT - QUICK TOUR
 
-Entrez Direct (EDirect) is an advanced method for accessing the NCBI's set of interconnected data domains (publication, sequence, structure, variation, expression) from a terminal window. Functions take search terms from command-line arguments. Individual operations are combined into multi-step queries. Record retrieval and formatting are normally the final steps in the query.
+Entrez Direct (EDirect) is an advanced method for accessing the NCBI's set of interconnected data domains (publication, sequence, structure, variation, expression) from a terminal window. Functions take search terms from command-line arguments. Individual operations are combined to build multi-step queries. Record retrieval and formatting are normally the final steps in the query.
 
 ENTREZ DIRECT FUNCTION SUMMARY
 
