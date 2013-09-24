@@ -95,7 +95,7 @@ The scripting examples at the end of this document will produce a report giving 
 
 EXAMINING INTERMEDIATE RESULTS
 
-EDirect navigation functions produce a small structured XML object that is passed to the next command. Retrieval functions read the XML values and return the designated report from the history server.
+EDirect navigation functions produce a small structured XML object that is passed to the next command. Retrieval functions read the XML values and download the desired reports from the history server.
 
 The Count field in the XML intermediate gives the number of records returned by the previous step. A good measure of success is a reasonable (non-zero) value:
 
