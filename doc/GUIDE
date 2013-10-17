@@ -1533,8 +1533,8 @@ Efetch -format and -mode values for each database are shown below:
 
   mesh
                  full                        Full Record
-                 native             xml      RecordSet XML
                  native                      MeSH Report
+                 native             xml      RecordSet XML
 
   nlmcatalog
                  native                      Full Record
