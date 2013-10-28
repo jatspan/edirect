@@ -802,6 +802,21 @@ sub has_element {
     return false;
   }
 
+
+  # regular expression search for <element>value</element> (undocumented)
+
+  if ( $str =~ /(.+)\:(.+)/ ) {
+    $ptrn = $1;
+    $chld = $2;
+
+    if ( $line =~ /<$ptrn(?:\s+.+?)?>$chld<\/$ptrn>/ ) {
+      return true;
+    }
+
+    return false;
+  }
+
+
   # regular expression search for element tag
 
   if ( $line =~ /<$str(?:\s+.+?)?>/ ) {
