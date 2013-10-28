@@ -97,6 +97,7 @@ sub clearflags {
   $emaddr = "";
   $email = "";
   $err = "";
+  $extrafeat = -1;
   $field = "";
   $holding = "";
   $http = "";
@@ -1042,6 +1043,7 @@ sub eftch {
     "seq_stop=i" => \$seq_stop,
     "strand=s" => \$strand,
     "complexity=i" => \$complexity,
+    "extrafeat=i" => \$extrafeat,
     "start=i" => \$min,
     "stop=i" => \$max,
     "email=s" => \$emaddr,
@@ -1219,6 +1221,9 @@ sub eftch {
     if ( $complexity > 0 ) {
       $arg .= "&complexity=$complexity";
     }
+    if ( $extrafeat > -1 ) {
+      $arg .= "&extrafeat=$extrafeat";
+    }
 
     $data = do_post_yielding_ref ($url, $arg, $tool, $email, true);
 
@@ -1271,6 +1276,9 @@ sub eftch {
     }
     if ( $complexity > 0 ) {
       $arg .= "&complexity=$complexity";
+    }
+    if ( $extrafeat > -1 ) {
+      $arg .= "&extrafeat=$extrafeat";
     }
 
     $data = "";
