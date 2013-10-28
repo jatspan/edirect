@@ -803,7 +803,7 @@ sub has_element {
   }
 
 
-  # regular expression search for <element>value</element> (undocumented)
+  # regular expression search for element:value (undocumented)
 
   if ( $str =~ /(.+)\:(.+)/ ) {
     $ptrn = $1;
