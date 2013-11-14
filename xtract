@@ -141,6 +141,18 @@ sub process_element {
     }
 
 
+    # INSDSeq special cases - &Feature and &Qualifier
+
+    if ( $itm =~ /^\&Feature$/ ) {
+
+      $itm = "INSDFeature_key";
+
+    } elsif ( $itm =~ /^\&Qualifier$/ ) {
+
+      $itm = "INSDQualifier_value";
+    }
+
+
     # -element pattern recognition
 
     if ( $itm =~ /^&([A-Z0-9]+)$/ ) {
@@ -803,6 +815,18 @@ sub has_element {
   }
 
 
+  # INSDSeq special cases - &Feature:name and &Qualifier:name
+
+  if ( $str =~ /^\&Feature\:(.+)/ ) {
+
+    $str = "INSDFeature_key:" . "$1";
+
+  } elsif ( $str =~ /^\&Qualifier\:(.+)/ ) {
+
+    $str = "INSDQualifier_name:" . "$1";
+  }
+
+
   # regular expression search for element:value (undocumented)
 
   if ( $str =~ /(.+)\:(.+)/ ) {
@@ -1274,6 +1298,15 @@ sub process_level {
 
       my $pat = $tmp[$start + 1];
       my $chd = "";
+
+      # INSDSeq special cases - &Feature and &Qualifier
+
+      if ( $pat =~ /^\&Feature$/ ) {
+        $pat = "INSDFeature";
+      } elsif ( $pat =~ /^\&Qualifier$/ ) {
+        $pat = "INSDQualifier";
+      }
+
       if ( $pat =~ /(.+)\/(.+)/ ) {
         $pat = $1;
         $chd = $2;
@@ -1377,6 +1410,53 @@ sub process_level {
   return $tab, $ret;
 }
 
+sub process_insd {
+
+  # xtract -insd mat_peptide "%peptide" product peptide
+
+  my @args = @{shift (@_)};
+
+  my $max = scalar @args;
+
+  if ( $max < 2 ) {
+    print STDERR "Must supply a feature key and at least one qualifier name\n";
+    return;
+  }
+
+  # read feature key
+
+  my $feat = $args[1];
+
+  print "xtract -pattern INSDSeq -ACCN INSDSeq_accession-version \\\n";
+  print "  -group INSDFeature \\\n";
+  print "    -present \"INSDFeature_key:$feat\" \\\n";
+  print "    -pfx \"\\n\" -element \"&ACCN\" \\\n";
+
+  for ( my $i = 2; $i < $max; $i++ ) {
+
+    # read qualifier names
+
+    my $qual = $args[$i];
+
+    print "    -block INSDQualifier";
+
+    if ( $qual =~ /^%(.+)/ ) {
+      $qual = $1;
+      print " -present \"INSDQualifier_name:$qual\"";
+      print " -element \"\%INSDQualifier_value\"";
+    } else {
+      print " -present \"INSDQualifier_name:$qual\"";
+      print " -element INSDQualifier_value";
+    }
+
+    if ( $i == $max - 1 ) {
+      print " | \\\n";
+    } else {
+      print " \\\n";
+    }
+  }
+}
+
 sub xtract {
 
   # ... | xtract -pattern ... -group ... -block ... -subset ... -element ...
@@ -1385,6 +1465,11 @@ sub xtract {
 
   if ( $max > 0 and $ARGV[0] eq "-version" ) {
     print "$version\n";
+    return;
+  }
+
+  if ( $max > 0 and $ARGV[0] eq "-insd" ) {
+    process_insd ( \@ARGV );
     return;
   }
 
