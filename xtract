@@ -384,6 +384,26 @@ sub process_element {
 
       push (@accum, $len);
 
+    } elsif ( $cmmd eq "-even" ) {
+
+      my $take = false;
+      foreach $dec (@working) {
+        if ( $take ) {
+          push (@accum, $dec);
+        }
+        $take = (! $take);
+      }
+
+    } elsif ( $cmmd eq "-odd" ) {
+
+      my $take = true;
+      foreach $dec (@working) {
+        if ( $take ) {
+          push (@accum, $dec);
+        }
+        $take = (! $take);
+      }
+
     } else {
 
       foreach $dec (@working) {
@@ -649,6 +669,8 @@ sub process_flags {
     } elsif ( $val eq "-element" or
               $val eq "-first" or
               $val eq "-last" or
+              $val eq "-even" or
+              $val eq "-odd" or
               $val eq "-single" or
               $val eq "-head" or
               $val eq "-inner" or
@@ -672,6 +694,10 @@ sub process_flags {
         $cmmd = "-first";
       } elsif ( $first_or_last eq "l" ) {
         $cmmd = "-last";
+      } elsif ( $first_or_last eq "e" ) {
+        $cmmd = "-even";
+      } elsif ( $first_or_last eq "o" ) {
+        $cmmd = "-odd";
       } elsif ( $first_or_last eq "s" ) {
         $cmmd = "-single";
       } elsif ( $first_or_last eq "h" ) {
