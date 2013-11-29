@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "0.99";
+$version = "0.995";
 
 # initialize memory hash
 
@@ -822,9 +822,9 @@ sub has_content {
   $str =~ s/^\\\?/?/;
 
 
-  # exact match by data contents, not using regular expression
+  # exact match by data contents, not using regular expression, case insensitive
 
-  if ( index ( $line, $str ) >= 0 ) {
+  if ( index ( uc($line), uc($str) ) >= 0 ) {
     return true;
   }
 
@@ -853,13 +853,13 @@ sub has_element {
   }
 
 
-  # regular expression search for element:value (undocumented)
+  # regular expression search for element:value
 
   if ( $str =~ /(.+)\:(.+)/ ) {
     $ptrn = $1;
     $chld = $2;
 
-    if ( $line =~ /<$ptrn(?:\s+.+?)?>$chld<\/$ptrn>/ ) {
+    if ( $line =~ /<$ptrn(?:\s+.+?)?>$chld<\/$ptrn>/i ) {
       return true;
     }
 
@@ -869,11 +869,13 @@ sub has_element {
 
   # regular expression search for element tag
 
-  if ( $line =~ /<$str(?:\s+.+?)?>/ ) {
+  if ( $line =~ /<$str(?:\s+.+?)?>/i ) {
     return true;
   }
 
-  if ( $line =~ /<$str(?:\s+.+?)?\/>/ ) {
+  # also test self-closing tag
+
+  if ( $line =~ /<$str(?:\s+.+?)?\/>/i ) {
     return true;
   }
 
@@ -1085,7 +1087,7 @@ sub process_level {
   }
 
 
-  # -trim before -match/-present/-avoid/-absent removes first XML tag
+  # -trim before -present/-match/-absent/-avoid removes first XML tag
 
   while ( $max > 1 and $args[0] eq "-trim" ) {
 
@@ -1098,9 +1100,9 @@ sub process_level {
   }
 
 
-  # -match ... -and/-or ... command filters for indicated data content
+  # -present ... -and/-or ... command filters for indicated data content
 
-  if ( $max > 2 and $args[0] eq "-match" ) {
+  if ( $max > 2 and $args[0] eq "-present" ) {
 
     my $required = 1;
     my $observed = 0;
@@ -1119,7 +1121,7 @@ sub process_level {
     while ( $max > 2 and ( $args[0] eq "-or" or $args[0] eq "-and" )) {
 
       if ( $prevbool ne "" and $prevbool ne $args[0] ) {
-        print STDERR "A mixture of -and and -or commands cannot follow -match\n";
+        print STDERR "A mixture of -and and -or commands cannot follow -present\n";
         return $tab, $ret;
       }
 
@@ -1142,9 +1144,9 @@ sub process_level {
     }
   }
 
-  # -present ... -and/-or ... command filters for indicated element tag
+  # -match ... -and/-or ... command filters for indicated element tag
 
-  if ( $max > 2 and $args[0] eq "-present" ) {
+  if ( $max > 2 and $args[0] eq "-match" ) {
 
     my $required = 1;
     my $observed = 0;
@@ -1163,7 +1165,7 @@ sub process_level {
     while ( $max > 2 and ( $args[0] eq "-or" or $args[0] eq "-and" )) {
 
       if ( $prevbool ne "" and $prevbool ne $args[0] ) {
-        print STDERR "A mixture of -and and -or commands cannot follow -present\n";
+        print STDERR "A mixture of -and and -or commands cannot follow -match\n";
         return $tab, $ret;
       }
 
@@ -1187,9 +1189,9 @@ sub process_level {
   }
 
 
-  # -avoid ... -and ... command filters against indicated data content
+  # -absent ... -and ... command filters against indicated data content
 
-  if ( $max > 2 and $args[0] eq "-avoid" ) {
+  if ( $max > 2 and $args[0] eq "-absent" ) {
 
     my $skip = $args[1];
     $max -= 2;
@@ -1213,14 +1215,14 @@ sub process_level {
     }
 
     if ( $max > 1 and $args[0] eq "-or" ) {
-      print STDERR "The -or command cannot follow -avoid\n";
+      print STDERR "The -or command cannot follow -absent\n";
       return $tab, $ret;
     }
   }
 
-  # -absent ... -and ... command filters against indicated element tag
+  # -avoid ... -and ... command filters against indicated element tag
 
-  if ( $max > 2 and $args[0] eq "-absent" ) {
+  if ( $max > 2 and $args[0] eq "-avoid" ) {
 
     my $skip = $args[1];
     $max -= 2;
@@ -1244,13 +1246,13 @@ sub process_level {
     }
 
     if ( $max > 1 and $args[0] eq "-or" ) {
-      print STDERR "The -or command cannot follow -absent\n";
+      print STDERR "The -or command cannot follow -avoid\n";
       return $tab, $ret;
     }
   }
 
 
-  # -trim after -match/-present/-avoid/-absent removes first XML tag
+  # -trim after -present/-match/-absent/-avoid removes first XML tag
 
   while ( $max > 1 and $args[0] eq "-trim" ) {
 
@@ -1455,7 +1457,7 @@ sub process_insd {
 
   print "xtract -pattern INSDSeq -ACCN INSDSeq_accession-version \\\n";
   print "  -group INSDFeature \\\n";
-  print "    -present \"INSDFeature_key:$feat\" \\\n";
+  print "    -match \"INSDFeature_key:$feat\" \\\n";
   print "    -pfx \"\\n\" -element \"&ACCN\" \\\n";
 
   for ( my $i = 2; $i < $max; $i++ ) {
@@ -1468,10 +1470,10 @@ sub process_insd {
 
     if ( $qual =~ /^%(.+)/ ) {
       $qual = $1;
-      print " -present \"INSDQualifier_name:$qual\"";
+      print " -match \"INSDQualifier_name:$qual\"";
       print " -element \"\%INSDQualifier_value\"";
     } else {
-      print " -present \"INSDQualifier_name:$qual\"";
+      print " -match \"INSDQualifier_name:$qual\"";
       print " -element INSDQualifier_value";
     }
 
