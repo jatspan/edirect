@@ -1542,6 +1542,118 @@ sub process_insd {
   }
 }
 
+sub process_make {
+
+  # xtract -make pubmed Author "LastName" " " "LastName,Initials" Alpher Bethe Gamow
+
+  my @args = @{shift (@_)};
+
+  my $max = scalar @args;
+
+  if ( $max < 6 ) {
+    print STDERR "Must supply db, block, match, sep, element, and at least one data value\n";
+    return;
+  }
+
+  my $db = $args[1];
+  my $obj = $args[2];
+  my $mat = $args[3];
+  my $sep = $args[4];
+  my $elm = $args[5];
+
+  my $pat = "";
+  my $uid = "";
+
+  if ( $db eq "nucleotide" ) {
+    $db = "nuccore";
+  }
+
+  if ( $db eq "pubmed" ) {
+    $pat = "PubmedArticle";
+    $uid = "MedlineCitation/PMID";
+  } elsif ( $db eq "nuccore" or $db eq "protein" ) {
+    $pat = "INSDSeq";
+    $uid = "INSDSeq_accession-version";
+  } else {
+    print STDERR "Currently only generates instructions for pubmed, nuccore, and protein\n";
+    return;
+  }
+
+  print "xtract -pattern $pat -element \"$uid\" \\\n";
+
+  for ( my $i = 6; $i < $max; $i++ ) {
+
+    # read items
+
+    my $itm = $args[$i];
+
+    print "  -block $obj";
+    print " -match \"$mat:$itm\"";
+    print " -sep \"$sep\" -element \"$elm\"";
+
+    if ( $i == $max - 1 ) {
+      print " | \\\n";
+      print "sort -t \$'\\t' -k 2f -k 1,1n | \\\n";
+      print "xtract -fuse $db\n";
+    } else {
+      print " \\\n";
+    }
+  }
+}
+
+sub process_fuse {
+
+  # xtract -fuse pubmed
+
+  my @args = @{shift (@_)};
+
+  my $max = scalar @args;
+
+  my $thisline = "";
+  my $laststr = "";
+  my $str = "";
+  my $uid = "";
+  my $count = 0;
+  my $is_first = true;
+  my $db = "pubmed";
+
+  if ( $max == 1 ) {
+    $db = $args[1];
+  }
+  my $pfx = "<p/><a href=\"http://www.ncbi.nlm.nih.gov/$db/";
+
+  while ($thisline = <STDIN>) {
+    $thisline =~ s/\r//;
+    $thisline =~ s/\n//;
+
+    if ($thisline =~ /^(.+)\t(.+)$/) {
+      $uid = $1;
+      $str = $2;
+
+      if ( $is_first ) {
+        print "<p/>";
+      }
+
+      if ( $str ne $laststr and $laststr ne "" ) {
+        $laststr =~ s/\t/, /;
+        print "\">($count)</a> - $laststr\n";
+        $pfx = "<p/><a href=\"http://www.ncbi.nlm.nih.gov/$db/";
+        $count = 0;
+      }
+      $laststr = $str;
+      print "$pfx$uid";
+      $pfx = ",";
+      $count++;
+      $is_first = false;
+    }
+  }
+
+  if ( $laststr ne "" ) {
+    $laststr =~ s/\t/, /;
+    print "\">($count)</a> - $laststr\n";
+  }
+}
+
 sub xtract {
 
   # ... | xtract -pattern ... -group ... -block ... -subset ... -element ...
@@ -1555,6 +1667,16 @@ sub xtract {
 
   if ( $max > 0 and $ARGV[0] eq "-insd" ) {
     process_insd ( \@ARGV );
+    return;
+  }
+
+  if ( $max > 0 and $ARGV[0] eq "-make" ) {
+    process_make ( \@ARGV );
+    return;
+  }
+
+  if ( $max > 0 and $ARGV[0] eq "-fuse" ) {
+    process_fuse ( \@ARGV );
     return;
   }
 
