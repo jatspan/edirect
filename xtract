@@ -1626,7 +1626,7 @@ sub process_fuse {
     $thisline =~ s/\r//;
     $thisline =~ s/\n//;
 
-    if ($thisline =~ /^(.+)\t(.+)$/) {
+    if ($thisline =~ /^([^\t]+)\t(.+)$/) {
       $uid = $1;
       $str = $2;
 
@@ -1635,7 +1635,7 @@ sub process_fuse {
       }
 
       if ( $str ne $laststr and $laststr ne "" ) {
-        $laststr =~ s/\t/, /;
+        $laststr =~ s/\t/, /g;
         print "\">($count)</a> - $laststr\n";
         $pfx = "<p/><a href=\"http://www.ncbi.nlm.nih.gov/$db/";
         $count = 0;
@@ -1649,7 +1649,7 @@ sub process_fuse {
   }
 
   if ( $laststr ne "" ) {
-    $laststr =~ s/\t/, /;
+    $laststr =~ s/\t/, /g;
     print "\">($count)</a> - $laststr\n";
   }
 }
