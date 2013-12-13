@@ -2263,10 +2263,6 @@ sub epost {
       }
     }
 
-    if ( ! $just_num ) {
-      die "Non-numeric value found in post input\n";
-    }
-
   } else {
 
     while ( @rest ) {
@@ -2284,7 +2280,10 @@ sub epost {
           $query =~ s/\./_/g;
           $field = "ACCN";
         }
+      } elsif ( ! $just_num ) {
+        die "Non-numeric value found in post input\n";
       }
+
       $query .= " [$field]";
 
       ( $web, $key ) = post_chunk ( $dbase, $web, $key, $tool, $email, "", $query );
