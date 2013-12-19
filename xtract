@@ -1150,6 +1150,11 @@ sub process_level {
         return $tab, $ret;
       } elsif ( $pstn eq "odd" and ( $indx % 2) == 0 ) {
         return $tab, $ret;
+
+      # value is actual numeric index
+
+      } elsif ( $pstn =~ /^[0-9]+$/ and $indx != $pstn ) {
+        return $tab, $ret;
       }
 
     } elsif ( $max > 2 and $args[0] eq "-match" ) {
