@@ -15,13 +15,14 @@ EDirect can look up the paper by searching on author names or text words, link t
 
 Records can be retrieved as standard document summaries or in a variety of report formats, such as an XML structured version of the GenPept flatfile:
 
-  efetch -format gpc -mode xml | \
+  efetch -format gpc | \
 
 The xtract function uses command-line arguments to direct the selective conversion of XML data into a tab-delimited table. Piping the data to:
 
   xtract -pattern INSDSeq -ACCN INSDSeq_accession-version \
-    -group INSDFeature -avoid ">proprotein<" -and ">sig_peptide<" \
-      -block INSDQualifier -match ">calculated_mol_wt<" \
+    -group INSDFeature \
+      -avoid "INSDFeature_key:proprotein" -and "INSDFeature_key:sig_peptide" \
+      -block INSDQualifier -match "INSDQualifier_name:calculated_mol_wt" \
       -sfx "\n" -tab "" -ret "" -element "&ACCN",INSDQualifier_value | \
 
 extracts the sequence accessions and protein molecular weights (including those of mature peptides from multi-product precursor proteins) into a 2-column table.

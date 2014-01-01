@@ -2,7 +2,7 @@ ENTREZ DIRECT - XML DATA EXTRACTION
 
 The Entrez Direct (EDirect) xtract function uses command-line arguments to direct the selective conversion of XML data into a tab-delimited table. The -pattern argument divides the results into rows, while placement of data into columns is controlled by -element.
 
-Additional arguments limit exploration to specified XML regions (-group, -block, and -subset), filter by data content (-match and -avoid) or elements (-present and -absent), and customize the report presentation. Individual fields can be grouped with commas and given specific prefix, suffix, and separator characters.
+Additional arguments limit exploration to specified XML regions (-group, -block, and -subset), filter by elements (-match and -avoid) or data content (-present and -absent), and customize the report presentation. Individual fields can be grouped with commas and given specific prefix, suffix, and separator characters.
 
 Tabular data can be piped to standard UNIX utilities or custom scripts for further processing. A query by specific PubMed unique identifiers:
 
@@ -25,13 +25,20 @@ produces a table that allows easy parsing of author names, counts the number of 
 Sequence records can be retrieved in an XML version of the GenBank or GenPept flatfile. Feature and qualifier names are data values, not XML tags, and require -match to select the desired object. A query for snail venom mature peptides:
 
   esearch -db protein -query "conotoxin AND mat_peptide [FKEY]" | \
-  efetch -format gpc -mode xml | \
+  efetch -format gpc | \
   xtract -pattern INSDSeq -ACCN INSDSeq_accession-version \
-    -group INSDFeature -match ">mat_peptide<" \
-        -avoid "<INSDFeature_partial" -pfx "\n" -element "&ACCN" \
-      -block INSDQualifier -match ">peptide<" -element "%INSDQualifier_value" \
-      -block INSDQualifier -match ">product<" -element INSDQualifier_value \
-      -block INSDQualifier -match ">peptide<" -element INSDQualifier_value | \
+    -group INSDFeature \
+      -match "INSDFeature_key:mat_peptide" \
+      -pfx "\n" -element "&ACCN" \
+      -block INSDQualifier \
+        -match "INSDQualifier_name:peptide" \
+          -element "%INSDQualifier_value" \
+      -block INSDQualifier \
+        -match "INSDQualifier_name:product" \
+          -element INSDQualifier_value \
+      -block INSDQualifier \
+        -match "INSDQualifier_name:peptide" \
+          -element INSDQualifier_value | \
   grep conotoxin | sort -t $'\t' -u -k 3,4 | \
   sort -t $'\t' -k 2,2n -k 3,3f | column -s $'\t' -t
 
@@ -50,8 +57,10 @@ calculates the length of each mature peptide, and prints the product name and pe
 
 Multiple -avoid or -match conditions are specified with -and and -or commands:
 
-  -group INSDFeature -avoid ">proprotein<" -and ">sig_peptide<" \
-    -block INSDQualifier -match ">calculated_mol_wt<" -or ">peptide<" \
+  -group INSDFeature \
+    -avoid "INSDFeature_key:proprotein" -and "INSDFeature_key:sig_peptide" \
+    -block INSDQualifier \
+      -match "INSDQualifier_name:calculated_mol_wt" -or "INSDQualifier_name:peptide" \
 
 Setting a variable default value, by placing text in parentheses, can be used to prevent columns from shifting when data fields are missing:
 
