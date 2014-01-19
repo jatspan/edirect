@@ -160,7 +160,7 @@ sub process_element {
       # match stored &VARIABLE
 
       my $idx = $1;
-      if ( exists ($memory{$idx}) ) {
+      if ( exists ($memory{$idx}) and $memory{"$idx"} ne "" ) {
         my $val = $memory{$idx};
         $dec = convert_http($val);
         push (@working, $dec);
