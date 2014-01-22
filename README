@@ -19,6 +19,7 @@ in a terminal window to temporarily add EDirect functions to the PATH environmen
   grep -i -e enzyme -e synthesis | \
   sort -t $'\t' -k 2,3f | \
   column -s $'\t' -t | \
+  head -n 10 | \
   cut -c 1-80
 
 This query returns the PubMed ID, first author name, and article title for PubMed "neighbors" (related citations) of the original publications. It then requires specific words in the resulting rows, sorts alphabetically by author name and title, aligns the columns, and truncates the lines for easier viewing:
@@ -34,6 +35,6 @@ EDirect will run on UNIX and Macintosh computers that have the Perl language ins
 
 Documentation for EDirect is on the web at:
 
-  http://www.ncbi.nlm.nih.gov/books/NBK130301
+  http://www.ncbi.nlm.nih.gov/books/NBK179288
 
 Questions or comments on EDirect may be sent to eutilities@ncbi.nlm.nih.gov.
