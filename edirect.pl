@@ -1236,7 +1236,7 @@ sub eftch {
       }
     }
 
-    Encode::from_to($$data, 'utf8', 'iso-8859-1');
+    Encode::_utf8_on($$data);
 
     print $$data;
 
@@ -1360,7 +1360,7 @@ sub eftch {
         $begin_time = $end_time;
       }
 
-      Encode::from_to($$data, 'utf8', 'iso-8859-1');
+      Encode::_utf8_on($$data);
 
       print $$data;
     }
@@ -2465,7 +2465,7 @@ sub esmry {
     } else {
       $data =~ s/<DocumentSummary uid=\"(\d+)\">/<DocumentSummary uid=\"$1\"><Id>$1<\/Id>/g;
 
-      Encode::from_to($data, 'utf8', 'iso-8859-1');
+      Encode::_utf8_on($data);
 
       print "$data";
     }
@@ -2568,7 +2568,7 @@ sub esmry {
 
       $data =~ s/<DocumentSummary uid=\"(\d+)\">/<DocumentSummary uid=\"$1\"><Id>$1<\/Id>/g;
 
-      Encode::from_to($data, 'utf8', 'iso-8859-1');
+      Encode::_utf8_on($data);
 
       print "$data";
     }
