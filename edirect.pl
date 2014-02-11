@@ -1026,6 +1026,165 @@ sub efilt {
   write_edirect ( $dbase, $web, $key, $num, $stp, $err, $tool, $email );
 }
 
+# efetch -format docsum calls esmry to retrieve document summaries
+
+sub esmry {
+
+  my $dbase = shift (@_);
+  my $web = shift (@_);
+  my $key = shift (@_);
+  my $num = shift (@_);
+  my $id = shift (@_);
+  my $min = shift (@_);
+  my $max = shift (@_);
+  my $tool = shift (@_);
+  my $email = shift (@_);
+  my $silent = shift (@_);
+  my $verbose = shift (@_);
+  my $debug = shift (@_);
+  my $log = shift (@_);
+  my $http = shift (@_);
+  my $alias = shift (@_);
+  my $basx = shift (@_);
+
+  if ( $dbase ne "" and $id ne "" ) {
+
+    if ( $id eq "0" ) {
+
+      # id "0" returns a live UID for any database
+
+      $id = get_zero_uid ($dbase);
+    }
+
+    $url = $base . $esummary;
+
+    $arg = "db=$dbase&id=$id";
+    $arg .= "&version=2.0";
+
+    $data = do_post ($url, $arg, $tool, $email, true);
+
+    if ($data =~ /<eSummaryResult>/i and $data =~ /<ERROR>(.+?)<\/ERROR>/i) {
+      $err = $1;
+      if ( $err ne "" ) {
+        if ( ! $silent ) {
+          print STDERR "ERROR in esummary: $err\n";
+        }
+      }
+    } else {
+      $data =~ s/<DocumentSummary uid=\"(\d+)\">/<DocumentSummary><Id>$1<\/Id>/g;
+
+      Encode::_utf8_on($data);
+
+      print "$data";
+    }
+
+    return;
+  }
+
+  if ( $dbase ne "" and $web ne "" and $key eq "" and $num eq "0" ) {
+    # die "QueryKey value not found in summary input\n";
+    return;
+  }
+
+  test_edirect ( $dbase, $web, $key, $num, "summary" );
+
+  $stpminusone = $stp - 1;
+
+  # use larger chunk for document summaries
+  $chunk = 1000;
+  for ( $start = $min; $start < $max; $start += $chunk ) {
+    $url = $base . $esummary;
+
+    $chkx = $chunk;
+    if ( $start + $chkx > $max ) {
+      $chkx = $max - $start;
+    }
+
+    $arg = "db=$dbase&query_key=$key&WebEnv=$web";
+    $arg .= "&retstart=$start&retmax=$chkx&version=2.0";
+
+    $data = "";
+    $retry = true;
+
+    for ( $tries = 0; $tries < 3 && $retry; $tries++) {
+      $data = do_post ($url, $arg, $tool, $email, true);
+
+      if ($data =~ /<eSummaryResult>/i and $data =~ /<ERROR>(.+?)<\/ERROR>/i ) {
+        if ( ! $silent ) {
+          print STDERR "Retrying esummary, step $stp: $err\n";
+        }
+        sleep 3;
+      } else {
+        $retry = false;
+      }
+    }
+
+    if ($data =~ /<eSummaryResult>/i and $data =~ /<ERROR>(.+?)<\/ERROR>/i) {
+      $err = $1;
+      if ( $err ne "" ) {
+        if ( ! $silent ) {
+          my $from = $start + 1;
+          my $to = $start + $chunk;
+          if ( $to > $max ) {
+            $to = $max;
+          }
+          print STDERR "ERROR in esummary ($from-$to / $max): $err\n";
+          print STDERR "Replicate for debugging with:\n";
+          print STDERR "  edirutil -db $dbase -web $web -key $key -count $num";
+          if ( $stpminusone > 0 ) {
+            print STDERR " -step $stpminusone";
+          }
+          my $seconds = "";
+          my $end_time = Time::HiRes::time();
+          my $elapsed = $end_time - $begin_time;
+          if ( $elapsed > 0.0005 ) {
+            if ( $elapsed =~ /(\d+)\.(\d\d\d)\d+/ ) {
+              $seconds = "$1.$2";
+            }
+          }
+          if ( $seconds ne "" ) {
+            print STDERR " -seconds $seconds";
+          }
+          print STDERR " | efetch -format docsum -start $from -stop $to\n";
+        }
+      }
+    } else {
+      if ( $verbose ) {
+        my $from = $start + 1;
+        my $to = $start + $chunk;
+        if ( $to > $max ) {
+          $to = $max;
+        }
+        print STDERR "( edirutil -db $dbase -web $web -key $key -count $num";
+        if ( $stpminusone > 0 ) {
+          print STDERR " -step $stpminusone";
+        }
+        my $seconds = "";
+        my $end_time = Time::HiRes::time();
+        my $elapsed = $end_time - $begin_time;
+        if ( $elapsed > 0.0005 ) {
+          if ( $elapsed =~ /(\d+)\.(\d\d\d)\d+/ ) {
+            $seconds = "$1.$2";
+          }
+        }
+        if ( $seconds ne "" ) {
+          print STDERR " -seconds $seconds";
+        }
+        print STDERR " | efetch -format docsum -start $from -stop $to )\n";
+        $begin_time = $end_time;
+      }
+
+      $data =~ s/<DocumentSummary uid=\"(\d+)\">/<DocumentSummary><Id>$1<\/Id>/g;
+
+      Encode::_utf8_on($data);
+
+      print "$data";
+    }
+
+    sleep 1;
+  }
+}
+
 # eftch can read all arguments from the command line or participate in an EUtils pipe
 
 sub eftch {
@@ -1121,6 +1280,14 @@ sub eftch {
   }
   if ( $max == 0 ) {
     $max = $num
+  }
+
+  if ( $type eq "docsum" or $fnc eq "-summary" ) {
+
+    esmry ( $dbase, $web, $key, $num, $id, $min, $max, $tool, $email,
+            $silent, $verbose, $debug, $log, $http, $alias, $basx );
+
+    return;
   }
 
   if ( $dbase eq "structure" and $type eq "mmdb" ) {
@@ -2375,208 +2542,6 @@ sub eprxy {
   write_edirect ( $dbase, $web, $key, $num, $stp, $err, $tool, $email );
 }
 
-# esmry can read all arguments from the command line or participate in an EUtils pipe
-
-sub esmry {
-
-  # ... | edirect.pl -summary | ...
-
-  clearflags ();
-
-  GetOptions (
-    "db=s" => \$db,
-    "id=s" => \$id,
-    "start=i" => \$min,
-    "stop=i" => \$max,
-    "email=s" => \$emaddr,
-    "tool=s" => \$tuul,
-    "silent" => \$silent,
-    "verbose" => \$verbose,
-    "debug" => \$debug,
-    "log" => \$log,
-    "http=s" => \$http,
-    "alias=s" => \$alias,
-    "base=s" => \$basx
-  );
-
-  # convert spaces between UIDs to commas
-
-  $id =~ s/ /,/g;
-  $id =~ s/,,/,/g;
-
-  if ( -t STDIN and not @ARGV ) {
-  } elsif ( $db ne "" and $id ne "" ) {
-  } else {
-    ( $dbase, $web, $key, $num, $stp, $err, $tool, $email, $just_num, @rest ) = read_edirect ();
-  }
-
-  read_aliases ();
-  adjust_base ();
-
-  if ( $err ne "" ) {
-    die "ERROR in summary input: $err\n\n";
-  }
-
-  if ( $dbase eq "" ) {
-    $dbase = $db;
-  }
-
-  if ( $tuul ne "" ) {
-    $tool = $tuul;
-  }
-  if ( $emaddr ne "" ) {
-    $email = $emaddr;
-  }
-
-  binmode STDOUT, ':utf8';
-
-  # arguments can override loop start and stop
-
-  if ( $min > 0 ) {
-    $min--;
-  }
-  if ( $max == 0 ) {
-    $max = $num
-  }
-
-  if ( $dbase ne "" and $id ne "" ) {
-
-    if ( $id eq "0" ) {
-
-      # id "0" returns a live UID for any database
-
-      $id = get_zero_uid ($dbase);
-    }
-
-    $url = $base . $esummary;
-
-    $arg = "db=$dbase&id=$id";
-    $arg .= "&version=2.0";
-
-    $data = do_post ($url, $arg, $tool, $email, true);
-
-    if ($data =~ /<eSummaryResult>/i and $data =~ /<ERROR>(.+?)<\/ERROR>/i) {
-      $err = $1;
-      if ( $err ne "" ) {
-        if ( ! $silent ) {
-          print STDERR "ERROR in esummary: $err\n";
-        }
-      }
-    } else {
-      $data =~ s/<DocumentSummary uid=\"(\d+)\">/<DocumentSummary uid=\"$1\"><Id>$1<\/Id>/g;
-
-      Encode::_utf8_on($data);
-
-      print "$data";
-    }
-
-    return;
-  }
-
-  if ( $dbase ne "" and $web ne "" and $key eq "" and $num eq "0" ) {
-    # die "QueryKey value not found in summary input\n";
-    return;
-  }
-
-  test_edirect ( $dbase, $web, $key, $num, "summary" );
-
-  $stpminusone = $stp - 1;
-
-  # use larger chunk for document summaries
-  $chunk = 1000;
-  for ( $start = $min; $start < $max; $start += $chunk ) {
-    $url = $base . $esummary;
-
-    $chkx = $chunk;
-    if ( $start + $chkx > $max ) {
-      $chkx = $max - $start;
-    }
-
-    $arg = "db=$dbase&query_key=$key&WebEnv=$web";
-    $arg .= "&retstart=$start&retmax=$chkx&version=2.0";
-
-    $data = "";
-    $retry = true;
-
-    for ( $tries = 0; $tries < 3 && $retry; $tries++) {
-      $data = do_post ($url, $arg, $tool, $email, true);
-
-      if ($data =~ /<eSummaryResult>/i and $data =~ /<ERROR>(.+?)<\/ERROR>/i ) {
-        if ( ! $silent ) {
-          print STDERR "Retrying esummary, step $stp: $err\n";
-        }
-        sleep 3;
-      } else {
-        $retry = false;
-      }
-    }
-
-    if ($data =~ /<eSummaryResult>/i and $data =~ /<ERROR>(.+?)<\/ERROR>/i) {
-      $err = $1;
-      if ( $err ne "" ) {
-        if ( ! $silent ) {
-          my $from = $start + 1;
-          my $to = $start + $chunk;
-          if ( $to > $max ) {
-            $to = $max;
-          }
-          print STDERR "ERROR in esummary ($from-$to / $max): $err\n";
-          print STDERR "Replicate for debugging with:\n";
-          print STDERR "  edirutil -db $dbase -web $web -key $key -count $num";
-          if ( $stpminusone > 0 ) {
-            print STDERR " -step $stpminusone";
-          }
-          my $seconds = "";
-          my $end_time = Time::HiRes::time();
-          my $elapsed = $end_time - $begin_time;
-          if ( $elapsed > 0.0005 ) {
-            if ( $elapsed =~ /(\d+)\.(\d\d\d)\d+/ ) {
-              $seconds = "$1.$2";
-            }
-          }
-          if ( $seconds ne "" ) {
-            print STDERR " -seconds $seconds";
-          }
-          print STDERR " | esummary -start $from -stop $to\n";
-        }
-      }
-    } else {
-      if ( $verbose ) {
-        my $from = $start + 1;
-        my $to = $start + $chunk;
-        if ( $to > $max ) {
-          $to = $max;
-        }
-        print STDERR "( edirutil -db $dbase -web $web -key $key -count $num";
-        if ( $stpminusone > 0 ) {
-          print STDERR " -step $stpminusone";
-        }
-        my $seconds = "";
-        my $end_time = Time::HiRes::time();
-        my $elapsed = $end_time - $begin_time;
-        if ( $elapsed > 0.0005 ) {
-          if ( $elapsed =~ /(\d+)\.(\d\d\d)\d+/ ) {
-            $seconds = "$1.$2";
-          }
-        }
-        if ( $seconds ne "" ) {
-          print STDERR " -seconds $seconds";
-        }
-        print STDERR " | esummary -start $from -stop $to )\n";
-        $begin_time = $end_time;
-      }
-
-      $data =~ s/<DocumentSummary uid=\"(\d+)\">/<DocumentSummary uid=\"$1\"><Id>$1<\/Id>/g;
-
-      Encode::_utf8_on($data);
-
-      print "$data";
-    }
-
-    sleep 1;
-  }
-}
-
 # esrch performs a new EUtils search, but can read a previous web environment value
 
 sub esrch {
@@ -2726,7 +2691,7 @@ if ( scalar @ARGV > 0 and $ARGV[0] eq "-version" ) {
 } elsif ( $fnc eq "-filter" ) {
   efilt ();
 } elsif ( $fnc eq "-summary" ) {
-  esmry ();
+  eftch ();
 } elsif ( $fnc eq "-fetch" ) {
   eftch ();
 } elsif ( $fnc eq "-info" ) {

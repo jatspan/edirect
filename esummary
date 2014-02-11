@@ -8,4 +8,4 @@ case "`uname -s`" in
    fi
    ;;
 esac
-exec perl "$dir"/edirect.pl -summary "$@"
+exec perl "$dir"/edirect.pl -fetch -format docsum "$@"
