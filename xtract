@@ -1685,6 +1685,51 @@ sub xtract {
     return;
   }
 
+  if ( $max > 1 and $ARGV[0] eq "-split" ) {
+
+    # -split reads data stream and writes chunks on separate lines
+
+    my $pat = $ARGV[1];
+    my $in_pat = false;
+    my @working = ();
+
+    while ( defined($thisline = <STDIN>) ) {
+      $thisline =~ s/\r//g;
+      $thisline =~ s/\n//g;
+      $thisline =~ s/\t//g;
+      $thisline =~ s/ +/ /g;
+      $thisline =~ s/> </></g;
+
+      my @tokens = split (/(?<=>)(?=<)/, $thisline);
+      foreach $tkn (@tokens) {
+        if ( $tkn =~ /^ +(.+)$/ ) {
+          $tkn = $1;
+        }
+        if ( $tkn =~ /^(.+) +$/ ) {
+          $tkn = $1;
+        }
+        if ( $tkn =~ /<$pat(?:\s+.+?)?>/ ) {
+          push (@working, $tkn);
+          $in_pat = true;
+        } elsif ( $tkn =~ /<\/$pat>/ ) {
+          push (@working, $tkn);
+          $in_pat = false;
+          my $str = join ("", @working);
+          print "$str\n";
+          @working = ();
+        } elsif ( $in_pat) {
+          push (@working, $tkn);
+        }
+      }
+    }
+    if ( scalar @working > 0 ) {
+      my $str = join ("", @working);
+      print "$str\n";
+    }
+
+    return;
+  }
+
   my $ret = "";
   my $tab = "";
 
@@ -1710,7 +1755,7 @@ sub xtract {
 
       my @tmp = @ARGV;
       %memory = ();
-      ( $tab, $ret ) = process_level ( $thisline, "", "", \@tmp, $ret, "", $initial_level, 1, 1 );
+      ( $tab, $ret ) = process_level ( $thisline, "", "", \@tmp, "", "", $initial_level, 1, 1 );
       print "$ret";
     }
 
