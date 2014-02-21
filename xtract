@@ -1685,6 +1685,12 @@ sub xtract {
     return;
   }
 
+  # recommended nested organizer levels are -group, -block, and -subset
+
+  # intermediate levels (-division, -branch, -section, and -unit) kept in reserve
+
+  # initial capitalized versions (-Group, -Block, etc.) use tokenized pattern matching
+
   if ( $max > 1 and $ARGV[0] eq "-split" ) {
 
     # -split reads data stream and writes chunks on separate lines
@@ -1733,17 +1739,9 @@ sub xtract {
   my $ret = "";
   my $tab = "";
 
-  my $rpt = 1;
-
-  # recommended nested organizer levels are -group, -block, and -subset
-
-  # intermediate levels (-division, -branch, -section, and -unit) kept in reserve
-
-  # initial capitalized versions (-Group, -Block, etc.) use tokenized pattern matching
-
   if ( $max > 2 and $ARGV[0] eq "-pipe" ) {
 
-    # -pipe reads data that has already been compressed by xtract with no arguments
+    # -pipe reads data that has already been compressed by xtract -split
 
     @ARGV = splice (@ARGV, 1, $max - 1);
     while ( defined($thisline = <STDIN>) ) {
@@ -1761,6 +1759,66 @@ sub xtract {
 
     return;
   }
+
+  if ( $max > 2 and $ARGV[0] eq "-pattern" ) {
+
+    # simple -pattern reads data stream and processes one pattern at a time
+
+    my $pat = $ARGV[1];
+
+    if ( $pat !~ /\// ) {
+
+      @ARGV = splice (@ARGV, 2, $max - 2);
+
+      my $in_pat = false;
+      my @working = ();
+
+      while ( defined($thisline = <STDIN>) ) {
+        $thisline =~ s/\r//g;
+        $thisline =~ s/\n//g;
+        $thisline =~ s/\t//g;
+        $thisline =~ s/ +/ /g;
+        $thisline =~ s/> </></g;
+
+        my @tokens = split (/(?<=>)(?=<)/, $thisline);
+        foreach $tkn (@tokens) {
+          if ( $tkn =~ /^ +(.+)$/ ) {
+            $tkn = $1;
+          }
+          if ( $tkn =~ /^(.+) +$/ ) {
+            $tkn = $1;
+          }
+          if ( $tkn =~ /<$pat(?:\s+.+?)?>/ ) {
+            push (@working, $tkn);
+            $in_pat = true;
+          } elsif ( $tkn =~ /<\/$pat>/ ) {
+            push (@working, $tkn);
+            $in_pat = false;
+            my $str = join ("", @working);
+            @working = ();
+            my @tmp = @ARGV;
+            %memory = ();
+            ( $tab, $ret ) = process_level ( $str, $pat, "", \@tmp, "", "", $initial_level, 1, 1 );
+            print "$ret";
+          } elsif ( $in_pat) {
+            push (@working, $tkn);
+          }
+        }
+      }
+      if ( scalar @working > 0 ) {
+        my $str = join ("", @working);
+        @working = ();
+        my @tmp = @ARGV;
+        %memory = ();
+        ( $tab, $ret ) = process_level ( $str, $pat, "", \@tmp, "", "", $initial_level, 1, 1 );
+        print "$ret";
+      }
+
+      return;
+    }
+  }
+
+  my $rpt = 1;
 
   # read entire XML input stream into a single string
 
