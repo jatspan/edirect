@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "1.10";
+$version = "1.20";
 
 # initialize memory hash
 
@@ -1500,29 +1500,41 @@ sub process_level {
   return $tab, $ret;
 }
 
-sub process_insd {
+sub generate_insd {
 
-  # xtract -insd mat_peptide "%peptide" product peptide
+  # xtract -insd [+/-] mat_peptide "%peptide" product peptide
 
   my @args = @{shift (@_)};
 
   my $max = scalar @args;
 
-  if ( $max < 2 ) {
-    print STDERR "Must supply a feature key and at least one qualifier name\n";
-    return;
-  }
-
   # read feature key
 
-  my $feat = $args[1];
+  my $idx = 1;
+  my $partial = 0;
+
+  if ( $args[1] eq "+" ) {
+    $partial = 1;
+    $idx++;
+  } elsif ( $args[1] eq "-" ) {
+    $partial = -1;
+    $idx++;
+  }
+
+  my $feat = $args[$idx];
+  $idx++;
 
   print "xtract -pattern INSDSeq -ACCN INSDSeq_accession-version \\\n";
   print "  -group INSDFeature \\\n";
   print "    -match \"INSDFeature_key:$feat\" \\\n";
+  if ( $partial == 1 ) {
+    print "    -avoid INSDFeature_partial \\\n";
+  } elsif ( $partial == -1 ) {
+    print "    -match INSDFeature_partial \\\n";
+  }
   print "    -pfx \"\\n\" -element \"&ACCN\" \\\n";
 
-  for ( my $i = 2; $i < $max; $i++ ) {
+  for ( my $i = $idx; $i < $max; $i++ ) {
 
     # read qualifier names
 
@@ -1545,6 +1557,78 @@ sub process_insd {
       print " \\\n";
     }
   }
+}
+
+sub process_insd {
+
+  # ... | xtract -insd [+/-] mat_peptide "%peptide" product peptide
+
+  my @args = @{shift (@_)};
+
+  my $max = scalar @args;
+
+  my @working = ();
+
+  # read feature key
+
+  my $idx = 1;
+  my $partial = 0;
+
+  if ( $args[1] eq "+" ) {
+    $partial = 1;
+    $idx++;
+  } elsif ( $args[1] eq "-" ) {
+    $partial = -1;
+    $idx++;
+  }
+
+  my $feat = $args[$idx];
+  $idx++;
+
+  push (@working, "-pattern");
+  push (@working, "INSDSeq");
+  push (@working, "-ACCN");
+  push (@working, "INSDSeq_accession-version");
+  push (@working, "-group");
+  push (@working, "INSDFeature");
+  push (@working, "-match");
+  push (@working, "INSDFeature_key:$feat");
+  if ( $partial == 1 ) {
+    push (@working, "-avoid");
+    push (@working, "INSDFeature_partial");
+  } elsif ( $partial == -1 ) {
+    push (@working, "-match");
+    push (@working, "INSDFeature_partial");
+  }
+  push (@working, "-pfx");
+  push (@working, "\\n");
+  push (@working, "-element");
+  push (@working, "&ACCN");
+
+  for ( my $i = 2; $i < $max; $i++ ) {
+
+    # read qualifier names
+
+    my $qual = $args[$i];
+
+    push (@working, "-block");
+    push (@working, "INSDQualifier");
+
+    if ( $qual =~ /^%(.+)/ ) {
+      $qual = $1;
+      push (@working, "-match");
+      push (@working, "INSDQualifier_name:$qual");
+      push (@working, "-element");
+      push (@working, "\%INSDQualifier_value");
+    } else {
+      push (@working, "-match");
+      push (@working, "INSDQualifier_name:$qual");
+      push (@working, "-element");
+      push (@working, "INSDQualifier_value");
+    }
+  }
+
+  return @working;
 }
 
 sub process_make {
@@ -1670,11 +1754,6 @@ sub xtract {
     return;
   }
 
-  if ( $max > 0 and $ARGV[0] eq "-insd" ) {
-    process_insd ( \@ARGV );
-    return;
-  }
-
   if ( $max > 0 and $ARGV[0] eq "-make" ) {
     process_make ( \@ARGV );
     return;
@@ -1683,6 +1762,22 @@ sub xtract {
   if ( $max > 0 and $ARGV[0] eq "-fuse" ) {
     process_fuse ( \@ARGV );
     return;
+  }
+
+  # -insd without piped input will generate an extraction script
+  # -insd with piped input will dynamically execute the extraction
+
+  if ( $max > 0 and $ARGV[0] eq "-insd" ) {
+    if ( $max < 3) {
+      print STDERR "Must supply a feature key and at least one qualifier name\n";
+      return;
+    } elsif ( -t STDIN ) {
+      generate_insd ( \@ARGV );
+      return;
+    } else {
+      @ARGV = process_insd ( \@ARGV );
+      $max = scalar @ARGV;
+    }
   }
 
   # recommended nested organizer levels are -group, -block, and -subset
