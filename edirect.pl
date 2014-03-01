@@ -1035,6 +1035,7 @@ sub esmry {
   my $key = shift (@_);
   my $num = shift (@_);
   my $id = shift (@_);
+  my $mode = shift (@_);
   my $min = shift (@_);
   my $max = shift (@_);
   my $tool = shift (@_);
@@ -1060,6 +1061,9 @@ sub esmry {
 
     $arg = "db=$dbase&id=$id";
     $arg .= "&version=2.0";
+    if ( $mode ne "" and $mode ne "text" ) {
+      $arg .= "&retmode=$mode";
+    }
 
     $data = do_post ($url, $arg, $tool, $email, true);
 
@@ -1102,6 +1106,9 @@ sub esmry {
 
     $arg = "db=$dbase&query_key=$key&WebEnv=$web";
     $arg .= "&retstart=$start&retmax=$chkx&version=2.0";
+    if ( $mode ne "" and $mode ne "text" ) {
+      $arg .= "&retmode=$mode";
+    }
 
     $data = "";
     $retry = true;
@@ -1284,7 +1291,7 @@ sub eftch {
 
   if ( $type eq "docsum" or $fnc eq "-summary" ) {
 
-    esmry ( $dbase, $web, $key, $num, $id, $min, $max, $tool, $email,
+    esmry ( $dbase, $web, $key, $num, $id, $mode, $min, $max, $tool, $email,
             $silent, $verbose, $debug, $log, $http, $alias, $basx );
 
     return;
