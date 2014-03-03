@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "1.20";
+$version = "1.30";
 
 # initialize memory hash
 
@@ -1513,10 +1513,11 @@ sub generate_insd {
   my $idx = 1;
   my $partial = 0;
 
-  if ( $args[1] eq "+" ) {
+  my $plusminus = $args[1];
+  if ( $plusminus eq "+" or $plusminus eq "complete" ) {
     $partial = 1;
     $idx++;
-  } elsif ( $args[1] eq "-" ) {
+  } elsif ( $plusminus eq "-" or $plusminus eq "partial" ) {
     $partial = -1;
     $idx++;
   }
@@ -1528,9 +1529,9 @@ sub generate_insd {
   print "  -group INSDFeature \\\n";
   print "    -match \"INSDFeature_key:$feat\" \\\n";
   if ( $partial == 1 ) {
-    print "    -avoid INSDFeature_partial \\\n";
+    print "    -avoid INSDFeature_partial5 -and INSDFeature_partial3 \\\n";
   } elsif ( $partial == -1 ) {
-    print "    -match INSDFeature_partial \\\n";
+    print "    -match INSDFeature_partial5 -or INSDFeature_partial3 \\\n";
   }
   print "    -pfx \"\\n\" -element \"&ACCN\" \\\n";
 
@@ -1574,10 +1575,11 @@ sub process_insd {
   my $idx = 1;
   my $partial = 0;
 
-  if ( $args[1] eq "+" ) {
+  my $plusminus = $args[1];
+  if ( $plusminus eq "+" or $plusminus eq "complete" ) {
     $partial = 1;
     $idx++;
-  } elsif ( $args[1] eq "-" ) {
+  } elsif ( $plusminus eq "-" or $plusminus eq "partial" ) {
     $partial = -1;
     $idx++;
   }
@@ -1595,10 +1597,14 @@ sub process_insd {
   push (@working, "INSDFeature_key:$feat");
   if ( $partial == 1 ) {
     push (@working, "-avoid");
-    push (@working, "INSDFeature_partial");
+    push (@working, "INSDFeature_partial5");
+    push (@working, "-and");
+    push (@working, "INSDFeature_partial3");
   } elsif ( $partial == -1 ) {
     push (@working, "-match");
-    push (@working, "INSDFeature_partial");
+    push (@working, "INSDFeature_partial5");
+    push (@working, "-or");
+    push (@working, "INSDFeature_partial3");
   }
   push (@working, "-pfx");
   push (@working, "\\n");
