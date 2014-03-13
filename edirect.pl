@@ -75,7 +75,7 @@ $esummary = "esummary.fcgi";
 
 # EDirect version number
 
-$version = "1.30";
+$version = "1.40";
 
 # utility subroutines
 
@@ -99,6 +99,7 @@ sub clearflags {
   $err = "";
   $extrafeat = -1;
   $field = "";
+  $help = false;
   $holding = "";
   $http = "";
   $id = "";
@@ -851,6 +852,12 @@ sub write_edirect {
 
 # ecntc prepares the requested tool and email arguments for an EUtils pipe
 
+my $cntc_help = qq{
+-email    Contact person's address
+-tool     Name of script or program
+
+};
+
 sub ecntc {
 
   # ... | edirect.pl -contact -email darwin@beagle.edu -tool edirect_test | ...
@@ -860,6 +867,7 @@ sub ecntc {
   GetOptions (
     "email=s" => \$emaddr,
     "tool=s" => \$tuul,
+    "help" => \$help,
     "silent" => \$silent,
     "verbose" => \$verbose,
     "debug" => \$debug,
@@ -868,6 +876,11 @@ sub ecntc {
     "alias=s" => \$alias,
     "base=s" => \$basx
   );
+
+  if ( $help ) {
+    print $cntc_help;
+    return;
+  }
 
   if ( -t STDIN and not @ARGV ) {
   } else {
@@ -889,6 +902,18 @@ sub ecntc {
 
 # efilt performs ESearch query refinement on the EUtils history server
 
+my $filt_help = qq{
+-query       Query string
+
+-days        Number of days in the past
+-datetype    Date field abbreviation
+-mindate     Start of date range
+-maxdate     End of date range
+
+-label       Alias for query step
+
+};
+
 sub efilt {
 
   # ... | edirect.pl -filter -query "bacteria [ORGN]" -days 365 | ...
@@ -904,6 +929,7 @@ sub efilt {
     "label=s" => \$lbl,
     "email=s" => \$emaddr,
     "tool=s" => \$tuul,
+    "help" => \$help,
     "silent" => \$silent,
     "verbose" => \$verbose,
     "debug" => \$debug,
@@ -912,6 +938,11 @@ sub efilt {
     "alias=s" => \$alias,
     "base=s" => \$basx
   );
+
+  if ( $help ) {
+    print $filt_help;
+    return;
+  }
 
   if ( $query eq "" && $rldate < 1 and $mndate eq "" and $mxdate eq "" ) {
     die "Must supply -query or -days or -mindate and -maxdate arguments on command line\n";
@@ -1194,6 +1225,20 @@ sub esmry {
 
 # eftch can read all arguments from the command line or participate in an EUtils pipe
 
+my $ftch_help = qq{
+-format        Format of record or report
+-mode          text, xml, asn.1, json
+
+-db            Database name
+-id            Unique identifier or accession number
+
+-seq_start     First sequence position to retrieve
+-seq_stop      Last sequence position to retrieve
+-strand        Strand of DNA to retrieve
+-complexity    0 = default, 1 = bioseq, 3 = nuc-prot set
+
+};
+
 sub eftch {
 
   # ... | edirect.pl -fetch -format gp | ...
@@ -1215,6 +1260,7 @@ sub eftch {
     "email=s" => \$emaddr,
     "tool=s" => \$tuul,
     "pipe" => \$pipe,
+    "help" => \$help,
     "silent" => \$silent,
     "verbose" => \$verbose,
     "debug" => \$debug,
@@ -1223,6 +1269,11 @@ sub eftch {
     "alias=s" => \$alias,
     "base=s" => \$basx
   );
+
+  if ( $help ) {
+    print $ftch_help;
+    return;
+  }
 
   # convert spaces between UIDs to commas
 
@@ -1545,6 +1596,12 @@ sub eftch {
 
 # einfo obtains names of databases or names of fields and links per database
 
+my $info_help = qq{
+-db     Database name
+-dbs    Get all database names
+
+};
+
 sub einfo {
 
   # ... | edirect.pl -info -db pubmed | ...
@@ -1556,6 +1613,7 @@ sub einfo {
     "dbs" => \$dbs,
     "email=s" => \$emaddr,
     "tool=s" => \$tuul,
+    "help" => \$help,
     "silent" => \$silent,
     "verbose" => \$verbose,
     "debug" => \$debug,
@@ -1564,6 +1622,11 @@ sub einfo {
     "alias=s" => \$alias,
     "base=s" => \$basx
   );
+
+  if ( $help ) {
+    print $info_help;
+    return;
+  }
 
   read_aliases ();
   adjust_base ();
@@ -1902,6 +1965,24 @@ sub batch_elink {
 
 # elink without a target uses the source database for neighboring
 
+my $link_help = qq{
+-related    Neighbors in same database
+-target     Links in different database
+-name       Link name (e.g., pubmed_protein_refseq)
+
+-db         Database name
+-id         Unique identifier(s)
+
+-cmd        ELink command type
+-mode       "ref" uses LinkOut provider's web site
+-holding    Name of LinkOut provider
+
+-batch      Bypass Entrez history mechanism
+
+-label      Alias for query step
+
+};
+
 sub elink {
 
   # ... | edirect.pl -link -target structure | ...
@@ -1922,6 +2003,7 @@ sub elink {
     "label=s" => \$lbl,
     "email=s" => \$emaddr,
     "tool=s" => \$tuul,
+    "help" => \$help,
     "silent" => \$silent,
     "verbose" => \$verbose,
     "debug" => \$debug,
@@ -1930,6 +2012,11 @@ sub elink {
     "alias=s" => \$alias,
     "base=s" => \$basx
   );
+
+  if ( $help ) {
+    print $link_help;
+    return;
+  }
 
   # convert spaces between UIDs to commas
 
@@ -2200,6 +2287,12 @@ sub emmdb {
 
 # entfy sends e-mail
 
+my $ntfy_help = qq{
+-email    Contact person's address
+-tool     Name of script or program
+
+};
+
 sub entfy {
 
   # ... | edirect.pl -notify
@@ -2209,6 +2302,7 @@ sub entfy {
   GetOptions (
     "email=s" => \$emaddr,
     "tool=s" => \$tuul,
+    "help" => \$help,
     "silent" => \$silent,
     "verbose" => \$verbose,
     "debug" => \$debug,
@@ -2217,6 +2311,11 @@ sub entfy {
     "alias=s" => \$alias,
     "base=s" => \$basx
   );
+
+  if ( $help ) {
+    print $ntfy_help;
+    return;
+  }
 
   ( $dbase, $web, $key, $num, $stp, $err, $tool, $email, $just_num, @rest ) = read_edirect ();
 
@@ -2348,6 +2447,14 @@ sub post_chunk {
   return $webx, $keyx;
 }
 
+my $post_help = qq{
+-db        Database name
+-id        Unique identifier(s) or accession number(s)
+-format    uid or acc
+-label     Alias for query step
+
+};
+
 sub epost {
 
   # ... | edirect.pl -post -db nucleotide -format uid | ...
@@ -2361,6 +2468,7 @@ sub epost {
     "label=s" => \$lbl,
     "email=s" => \$emaddr,
     "tool=s" => \$tuul,
+    "help" => \$help,
     "silent" => \$silent,
     "verbose" => \$verbose,
     "debug" => \$debug,
@@ -2369,6 +2477,11 @@ sub epost {
     "alias=s" => \$alias,
     "base=s" => \$basx
   );
+
+  if ( $help ) {
+    print $post_help;
+    return;
+  }
 
   # convert spaces between UIDs to commas
 
@@ -2505,14 +2618,21 @@ sub epost {
 
 # eprxy reads a file of query proxies, can also pipe from stdin
 
+my $prxy_help = qq{
+-alias    File of aliases
+-pipe     Read aliases from stdin
+
+};
+
 sub eprxy {
 
-  # ... | edirect.pl -proxy -file file_name | ...
+  # ... | edirect.pl -proxy -alias file_name | ...
 
   clearflags ();
 
   GetOptions (
     "pipe" => \$pipe,
+    "help" => \$help,
     "silent" => \$silent,
     "verbose" => \$verbose,
     "debug" => \$debug,
@@ -2521,6 +2641,11 @@ sub eprxy {
     "alias=s" => \$alias,
     "base=s" => \$basx
   );
+
+  if ( $help ) {
+    print $prxy_help;
+    return;
+  }
 
   if ( -t STDIN and not @ARGV ) {
   } elsif ( $pipe ) {
@@ -2551,6 +2676,19 @@ sub eprxy {
 
 # esrch performs a new EUtils search, but can read a previous web environment value
 
+my $srch_help = qq{
+-db          Database name
+-query       Query string
+
+-days        Number of days in the past
+-datetype    Date field abbreviation
+-mindate     Start of date range
+-maxdate     End of date range
+
+-label       Alias for query step
+
+};
+
 sub esrch {
 
   # ... | edirect.pl -search -db nucleotide -query "M6506* [ACCN] OR 1322283 [UID]" -days 365 | ...
@@ -2567,6 +2705,7 @@ sub esrch {
     "label=s" => \$lbl,
     "email=s" => \$emaddr,
     "tool=s" => \$tuul,
+    "help" => \$help,
     "silent" => \$silent,
     "verbose" => \$verbose,
     "debug" => \$debug,
@@ -2575,6 +2714,11 @@ sub esrch {
     "alias=s" => \$alias,
     "base=s" => \$basx
   );
+
+  if ( $help ) {
+    print $srch_help;
+    return;
+  }
 
   if ( -t STDIN and not @ARGV ) {
   } else {

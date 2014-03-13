@@ -47,6 +47,10 @@ use URI::Escape;
 use constant false => 0;
 use constant true  => 1;
 
+# nquire version number
+
+$version = "1.40";
+
 # utility subroutines
 
 sub clearflags {
@@ -188,6 +192,12 @@ sub do_uri_escape {
 
 # nquire executes an external URL query from command line arguments
 
+my $nquire_help = qq{
+-url     Base URL for external search
+-http    "get" uses HTTP GET instead of POST
+
+};
+
 sub nquire {
 
   # nquire -url http://... -tag value -tag value | ...
@@ -200,6 +210,16 @@ sub nquire {
 
   @args = @ARGV;
   $max = scalar @args;
+
+  if ( $max > 0 and $ARGV[0] eq "-help" ) {
+    print $nquire_help;
+    return;
+  }
+
+  if ( $max > 0 and $ARGV[0] eq "-version" ) {
+    print "$version\n";
+    return;
+  }
 
   if ( $max < 2 ) {
     return;
