@@ -123,6 +123,7 @@ sub clearflags {
   $seq_start = 0;
   $seq_stop = 0;
   $silent = false;
+  $sort = "";
   $stp = "";
   $strand = "";
   $tool = "";
@@ -1973,7 +1974,7 @@ my $link_help = qq{
 -db         Database name
 -id         Unique identifier(s)
 
--cmd        ELink command type
+-cmd        ELink command type (returns eLinkResult XML)
 -mode       "ref" uses LinkOut provider's web site
 -holding    Name of LinkOut provider
 
@@ -2680,6 +2681,8 @@ my $srch_help = qq{
 -db          Database name
 -query       Query string
 
+-sort        ESearch sort order (returns eSearchResult XML)
+
 -days        Number of days in the past
 -datetype    Date field abbreviation
 -mindate     Start of date range
@@ -2698,6 +2701,7 @@ sub esrch {
   GetOptions (
     "db=s" => \$db,
     "query=s" => \$query,
+    "sort=s" => \$sort,
     "days=i" => \$rldate,
     "mindate=s" => \$mndate,
     "maxdate=s" => \$mxdate,
@@ -2762,7 +2766,13 @@ sub esrch {
   if ( $web ne "" ) {
     $arg .= "&WebEnv=$web";
   }
-  $arg .= "&retmax=0&usehistory=y";
+
+  if ( $sort ne "" ) {
+    $arg .= "&retmax=100000&sort=$sort";
+  } else {
+    $arg .= "&retmax=0&usehistory=y";
+  }
+
   if ( $rldate > 0 ) {
     $arg .= "&reldate=$rldate";
     if ( $dttype ne "" ) {
@@ -2782,6 +2792,15 @@ sub esrch {
   $wb = $web;
 
   $output = do_post ($url, $arg, $tool, $email, true);
+
+  if ( $sort ne "" ) {
+
+    # if sort indicated, write eSearchResult XML instead of ENTREZ_DIRECT
+
+    print "$output";
+
+    return;
+  }
 
   $web = "";
   $key = "";
