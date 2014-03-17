@@ -1789,6 +1789,7 @@ Miscellaneous Arguments
 
   -outline        Display outline of XML structure
   -synopsis       Display count of unique XML paths
+  -format         Repair XML format and indentation
 
   -insd           Generate INSDSeq extraction commands
 
@@ -1902,6 +1903,73 @@ sub xtract {
     if ( scalar @working > 0 ) {
       my $str = join ("", @working);
       print "$str\n";
+    }
+
+    return;
+  }
+
+  if ( $max > 0 and $ARGV[0] eq "-format" ) {
+
+    my $lvl = 0;
+    my $dpth = 0;
+
+    while ( defined($thisline = <STDIN>) ) {
+      $thisline =~ s/\r//g;
+      $thisline =~ s/\n//g;
+      $thisline =~ s/\t//g;
+      $thisline =~ s/ +/ /g;
+      $thisline =~ s/> </></g;
+
+      my @tokens = split (/(?<=>)(?=<)/, $thisline);
+      foreach $tkn (@tokens) {
+        if ( $lvl < 0 ) {
+          # ignore remainder if level drops below zero
+        } elsif ( $tkn =~ /^<\?xml/ || $tkn =~ /^<!DOCTYPE/ ) {
+          # ignore general header lines
+        } elsif ( $tkn =~ /^<.+?>.+?<\/(.+?)>$/ ) {
+          # content-containing tag
+          if ( $tkn =~ /^<(\S+).*?>.*>$/ ) {
+            $lvl++;
+            $dpth++;
+            for ( $i = 1; $i < $dpth; $i++ ) {
+              print "  ";
+            }
+            print "$tkn\n";
+            $lvl--;
+            $dpth--;
+          }
+        } elsif ( $tkn =~ /^<.+?\/>$/ ) {
+          # self-closing token
+          if ( $tkn =~ /^<(\S+).*?\/>$/ ) {
+            $lvl++;
+            $dpth++;
+            for ( $i = 1; $i < $dpth; $i++ ) {
+              print "  ";
+            }
+            print "$tkn\n";
+            $lvl--;
+            $dpth--;
+          }
+        } elsif ( $tkn =~ /^<[^\/]/ ) {
+          # open tag increments level
+          $lvl++;
+          $dpth++;
+          if ( $tkn =~ /^<(\S+).*?>$/ ) {
+            for ( $i = 1; $i < $dpth; $i++ ) {
+              print "  ";
+            }
+            print "$tkn\n";
+          }
+        } elsif ( $tkn =~ /^<\// ) {
+          # close tag decrements level
+          for ( $i = 1; $i < $dpth; $i++ ) {
+            print "  ";
+          }
+          print "$tkn\n";
+          $lvl--;
+          $dpth--;
+        }
+      }
     }
 
     return;

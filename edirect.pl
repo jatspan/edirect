@@ -1974,7 +1974,7 @@ my $link_help = qq{
 -db         Database name
 -id         Unique identifier(s)
 
--cmd        ELink command type (returns eLinkResult XML)
+-cmd        Command type (returns eLinkResult XML)
 -mode       "ref" uses LinkOut provider's web site
 -holding    Name of LinkOut provider
 
@@ -2681,7 +2681,7 @@ my $srch_help = qq{
 -db          Database name
 -query       Query string
 
--sort        ESearch sort order (returns eSearchResult XML)
+-sort        Sort order (returns eSearchResult XML)
 
 -days        Number of days in the past
 -datetype    Date field abbreviation
