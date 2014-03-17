@@ -212,6 +212,7 @@ sub nquire {
   $max = scalar @args;
 
   if ( $max > 0 and $ARGV[0] eq "-help" ) {
+    print "nquire $version\n";
     print $nquire_help;
     return;
   }

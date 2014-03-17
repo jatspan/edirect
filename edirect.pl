@@ -879,6 +879,7 @@ sub ecntc {
   );
 
   if ( $help ) {
+    print "econtact $version\n";
     print $cntc_help;
     return;
   }
@@ -941,6 +942,7 @@ sub efilt {
   );
 
   if ( $help ) {
+    print "efilter $version\n";
     print $filt_help;
     return;
   }
@@ -1272,6 +1274,7 @@ sub eftch {
   );
 
   if ( $help ) {
+    print "efetch $version\n";
     print $ftch_help;
     return;
   }
@@ -1625,6 +1628,7 @@ sub einfo {
   );
 
   if ( $help ) {
+    print "einfo $version\n";
     print $info_help;
     return;
   }
@@ -2015,6 +2019,7 @@ sub elink {
   );
 
   if ( $help ) {
+    print "elink $version\n";
     print $link_help;
     return;
   }
@@ -2314,6 +2319,7 @@ sub entfy {
   );
 
   if ( $help ) {
+    print "enotify $version\n";
     print $ntfy_help;
     return;
   }
@@ -2480,6 +2486,7 @@ sub epost {
   );
 
   if ( $help ) {
+    print "epost $version\n";
     print $post_help;
     return;
   }
@@ -2644,6 +2651,7 @@ sub eprxy {
   );
 
   if ( $help ) {
+    print "eproxy $version\n";
     print $prxy_help;
     return;
   }
@@ -2720,6 +2728,7 @@ sub esrch {
   );
 
   if ( $help ) {
+    print "esearch $version\n";
     print $srch_help;
     return;
   }

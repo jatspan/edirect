@@ -1814,6 +1814,7 @@ sub xtract {
   my $max = scalar @ARGV;
 
   if ( $max > 0 and $ARGV[0] eq "-help" ) {
+    print "xtract $version\n";
     print $xtract_help;
     return;
   }
@@ -1922,6 +1923,12 @@ sub xtract {
 
       my @tokens = split (/(?<=>)(?=<)/, $thisline);
       foreach $tkn (@tokens) {
+        if ( $tkn =~ /^ +(.+)$/ ) {
+          $tkn = $1;
+        }
+        if ( $tkn =~ /^(.+) +$/ ) {
+          $tkn = $1;
+        }
         if ( $lvl < 0 ) {
           # ignore remainder if level drops below zero
         } elsif ( $tkn =~ /^<\?xml/ || $tkn =~ /^<!DOCTYPE/ ) {
