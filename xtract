@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "1.40";
+$version = "1.50";
 
 # initialize memory hash
 
@@ -1527,12 +1527,47 @@ sub generate_insd {
 
   print "xtract -pattern INSDSeq -ACCN INSDSeq_accession-version \\\n";
   print "  -group INSDFeature \\\n";
-  print "    -match \"INSDFeature_key:$feat\" \\\n";
+
+  my @itms = split (' ', $feat);
+  my $j = 0;
+  foreach $itm (@itms) {
+    if ( $j == 0 ) {
+      print "    -match \"INSDFeature_key:$itm\" \\\n";
+    } else {
+      print "      -or \"INSDFeature_key:$itm\" \\\n";
+    }
+    $j++;
+  }
+
+  my $k = 0;
+  for ( my $i = $idx; $i < $max; $i++ ) {
+
+    # look for + in front of qualifier name
+
+    my $qual = $args[$i];
+
+    if ( $qual =~ /^\+(.+)/ ) {
+      $qual = $1;
+      if ( $qual =~ /^%(.+)/ ) {
+        $qual = $1;
+      }
+      if ( $k == 0 ) {
+        print "    -match \"INSDQualifier_name:$qual\"";
+        print " \\\n";
+      } else {
+        print "      -and \"INSDQualifier_name:$qual\"";
+        print " \\\n";
+      }
+      $k++;
+    }
+  }
+
   if ( $partial == 1 ) {
     print "    -avoid INSDFeature_partial5 -and INSDFeature_partial3 \\\n";
   } elsif ( $partial == -1 ) {
     print "    -match INSDFeature_partial5 -or INSDFeature_partial3 \\\n";
   }
+
   print "    -pfx \"\\n\" -element \"&ACCN\" \\\n";
 
   for ( my $i = $idx; $i < $max; $i++ ) {
@@ -1540,6 +1575,9 @@ sub generate_insd {
     # read qualifier names
 
     my $qual = $args[$i];
+    if ( $qual =~ /^\+(.+)/ ) {
+      $qual = $1;
+    }
 
     print "    -block INSDQualifier";
 
@@ -1593,8 +1631,39 @@ sub process_insd {
   push (@working, "INSDSeq_accession-version");
   push (@working, "-group");
   push (@working, "INSDFeature");
-  push (@working, "-match");
-  push (@working, "INSDFeature_key:$feat");
+
+  my @itms = split (' ', $feat);
+  my $j = 0;
+  foreach $itm (@itms) {
+    if ( $j == 0 ) {
+      push (@working, "-match");
+      push (@working, "INSDFeature_key:$itm");
+    } else {
+      push (@working, "-or");
+      push (@working, "INSDFeature_key:$itm");
+    }
+    $j++;
+  }
+
+  my $k = 0;
+  for ( my $i = $idx; $i < $max; $i++ ) {
+    my $qual = $args[$i];
+    if ( $qual =~ /^\+(.+)/ ) {
+      $qual = $1;
+      if ( $qual =~ /^%(.+)/ ) {
+        $qual = $1;
+      }
+      if ( $k == 0 ) {
+        push (@working, "-match");
+        push (@working, "INSDQualifier_name:$qual");
+      } else {
+        push (@working, "-and");
+        push (@working, "INSDQualifier_name:$qual");
+      }
+      $k++;
+    }
+  }
+
   if ( $partial == 1 ) {
     push (@working, "-avoid");
     push (@working, "INSDFeature_partial5");
@@ -1606,16 +1675,20 @@ sub process_insd {
     push (@working, "-or");
     push (@working, "INSDFeature_partial3");
   }
+
   push (@working, "-pfx");
   push (@working, "\\n");
   push (@working, "-element");
   push (@working, "&ACCN");
 
-  for ( my $i = 2; $i < $max; $i++ ) {
+  for ( my $i = $idx; $i < $max; $i++ ) {
 
     # read qualifier names
 
     my $qual = $args[$i];
+    if ( $qual =~ /^\+(.+)/ ) {
+      $qual = $1;
+    }
 
     push (@working, "-block");
     push (@working, "INSDQualifier");
