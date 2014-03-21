@@ -1407,11 +1407,26 @@ sub process_level {
       # normal non-greedy pattern matching for non-nested XML
 
       my @vals = ($line =~ /(<$pat(?:\s+.+?)?>.+?<\/$pat>)/g);
-      my $curr = 0;
-      my $totl = scalar @vals;
-      foreach $val (@vals) {
-        $curr++;
-        ( $tab, $ret ) = process_level ( $val, $pat, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl );
+
+      if ( scalar @vals > 0 ) {
+
+        my $curr = 0;
+        my $totl = scalar @vals;
+        foreach $val (@vals) {
+          $curr++;
+          ( $tab, $ret ) = process_level ( $val, $pat, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl );
+        }
+
+      } else {
+
+        @vals = ($line =~ /(<$pat(?:\s+.+?)\/>)/g);
+
+        my $curr = 0;
+        my $totl = scalar @vals;
+        foreach $val (@vals) {
+          $curr++;
+          ( $tab, $ret ) = process_level ( $val, $pat, $chd, \@group, $tab, $ret, $level - 1, $curr, $totl );
+        }
       }
 
     } elsif ( $tmp[$start] eq $capname and $stop - $start >= 2 ) {
