@@ -1557,7 +1557,7 @@ sub generate_insd {
   my $k = 0;
   for ( my $i = $idx; $i < $max; $i++ ) {
 
-    # look for + in front of qualifier name
+    # look for + in front of qualifier name (undocumented)
 
     my $qual = $args[$i];
 
@@ -1899,6 +1899,8 @@ sub xtract {
 
   # ... | xtract -pattern ... -group ... -block ... -subset ... -element ...
 
+  my $compress_spaces = true;
+
   my $max = scalar @ARGV;
 
   if ( $max > 0 and $ARGV[0] eq "-help" ) {
@@ -1920,6 +1922,14 @@ sub xtract {
   if ( $max > 0 and $ARGV[0] eq "-fuse" ) {
     process_fuse ( \@ARGV );
     return;
+  }
+
+  # -nocompress allows reading of BLAST XML match data with internal runs of spaces (undocumented)
+
+  if ( $max > 0 and $ARGV[0] eq "-nocompress" ) {
+    @ARGV = splice (@ARGV, 1, $max - 1);
+    $max = scalar @ARGV;
+    $compress_spaces = false;
   }
 
   # -insd without piped input will generate an extraction script
@@ -1956,8 +1966,10 @@ sub xtract {
       $thisline =~ s/\r//g;
       $thisline =~ s/\n//g;
       $thisline =~ s/\t//g;
-      $thisline =~ s/ +/ /g;
-      $thisline =~ s/> </></g;
+      if ( $compress_spaces ) {
+        $thisline =~ s/ +/ /g;
+      }
+      $thisline =~ s/> +</></g;
 
       my @tokens = split (/(?<=>)(?=<)/, $thisline);
       foreach $tkn (@tokens) {
@@ -2006,8 +2018,10 @@ sub xtract {
       $thisline =~ s/\r//g;
       $thisline =~ s/\n//g;
       $thisline =~ s/\t//g;
-      $thisline =~ s/ +/ /g;
-      $thisline =~ s/> </></g;
+      if ( $compress_spaces ) {
+        $thisline =~ s/ +/ /g;
+      }
+      $thisline =~ s/> +</></g;
 
       my @tokens = split (/(?<=>)(?=<)/, $thisline);
       foreach $tkn (@tokens) {
@@ -2082,8 +2096,10 @@ sub xtract {
       $thisline =~ s/\r//g;
       $thisline =~ s/\n//g;
       $thisline =~ s/\t//g;
-      $thisline =~ s/ +/ /g;
-      $thisline =~ s/> </></g;
+      if ( $compress_spaces ) {
+        $thisline =~ s/ +/ /g;
+      }
+      $thisline =~ s/> +</></g;
 
       my @tmp = @ARGV;
       %memory = ();
@@ -2114,8 +2130,10 @@ sub xtract {
       $thisline =~ s/\r//g;
       $thisline =~ s/\n//g;
       $thisline =~ s/\t//g;
-      $thisline =~ s/ +/ /g;
-      $thisline =~ s/> </></g;
+      if ( $compress_spaces ) {
+        $thisline =~ s/ +/ /g;
+      }
+      $thisline =~ s/> +</></g;
 
       my @tokens = split (/(?<=>)(?=<)/, $thisline);
       foreach $tkn (@tokens) {
@@ -2184,8 +2202,10 @@ sub xtract {
   $data =~ s/\r//g;
   $data =~ s/\n//g;
   $data =~ s/\t//g;
-  $data =~ s/ +/ /g;
-  $data =~ s/> </></g;
+  if ( $compress_spaces ) {
+   $data =~ s/ +/ /g;
+  }
+  $data =~ s/> +</></g;
 
   if ( $max == 0 or ( $max == 1 and $ARGV[0] ne "-outline" and $ARGV[0] ne "-synopsis" )) {
 
