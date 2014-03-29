@@ -2689,7 +2689,7 @@ my $srch_help = qq{
 -db          Database name
 -query       Query string
 
--sort        Sort order (returns eSearchResult XML)
+-sort        Result presentation order
 
 -days        Number of days in the past
 -datetype    Date field abbreviation
@@ -2777,10 +2777,9 @@ sub esrch {
   }
 
   if ( $sort ne "" ) {
-    $arg .= "&retmax=100000&sort=$sort";
-  } else {
-    $arg .= "&retmax=0&usehistory=y";
+    $arg .= "&sort=$sort";
   }
+  $arg .= "&retmax=0&usehistory=y";
 
   if ( $rldate > 0 ) {
     $arg .= "&reldate=$rldate";
@@ -2801,15 +2800,6 @@ sub esrch {
   $wb = $web;
 
   $output = do_post ($url, $arg, $tool, $email, true);
-
-  if ( $sort ne "" ) {
-
-    # if sort indicated, write eSearchResult XML instead of ENTREZ_DIRECT
-
-    print "$output";
-
-    return;
-  }
 
   $web = "";
   $key = "";
