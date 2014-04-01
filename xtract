@@ -868,6 +868,23 @@ sub has_element {
   }
 
 
+  # regular expression search for @attribute:value (undocumented)
+
+  if ( $str =~ /@(.+)\:(.+)/ ) {
+    my $attr = $1;
+    my $chld = $2;
+
+    if ( $line =~ /<\S+ ([^>]+)>/i ) {
+      my $atts = $1;
+      if ( $atts =~ /$attr=\"$chld\"/ ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+
   # regular expression search for element@attribute:value (undocumented)
 
   if ( $str =~ /(.+)@(.+)\:(.+)/ ) {
@@ -877,7 +894,7 @@ sub has_element {
 
     if ( $line =~ /<$ptrn ([^>]+)>/i ) {
       my $atts = $1;
-      if ( $1 =~ /$attr=\"$chld\"/ ) {
+      if ( $atts =~ /$attr=\"$chld\"/ ) {
         return true;
       }
     }
@@ -894,7 +911,7 @@ sub has_element {
 
     if ( $line =~ /<$ptrn ([^>]+)>/i ) {
       my $atts = $1;
-      if ( $1 =~ /$attr=\"([^\"]+)\"/ ) {
+      if ( $atts =~ /$attr=\"([^\"]+)\"/ ) {
         return true;
       }
     }
