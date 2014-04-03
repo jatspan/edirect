@@ -75,7 +75,7 @@ $esummary = "esummary.fcgi";
 
 # EDirect version number
 
-$version = "1.50";
+$version = "1.60";
 
 # utility subroutines
 

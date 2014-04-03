@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "1.50";
+$version = "1.60";
 
 # initialize memory hash
 
@@ -868,7 +868,7 @@ sub has_element {
   }
 
 
-  # regular expression search for @attribute:value (undocumented)
+  # regular expression search for @attribute:value
 
   if ( $str =~ /@(.+)\:(.+)/ ) {
     my $attr = $1;
@@ -885,7 +885,7 @@ sub has_element {
   }
 
 
-  # regular expression search for element@attribute:value (undocumented)
+  # regular expression search for element@attribute:value
 
   if ( $str =~ /(.+)@(.+)\:(.+)/ ) {
     my $ptrn = $1;
@@ -903,7 +903,7 @@ sub has_element {
   }
 
 
-  # regular expression search for element@attribute (undocumented)
+  # regular expression search for element@attribute
 
   if ( $str =~ /(.+)@(.+)/ ) {
     my $ptrn = $1;
@@ -1532,169 +1532,77 @@ sub process_level {
   return $tab, $ret;
 }
 
-sub generate_insd {
-
-  # xtract -insd [+/-] mat_peptide "%peptide" product peptide
-
-  my @args = @{shift (@_)};
-
-  my $max = scalar @args;
-
-  # read feature key
-
-  my $idx = 1;
-  my $partial = 0;
-
-  my $plusminus = $args[1];
-  if ( $plusminus eq "+" or $plusminus eq "complete" ) {
-    $partial = 1;
-    $idx++;
-  } elsif ( $plusminus eq "-" or $plusminus eq "partial" ) {
-    $partial = -1;
-    $idx++;
-  }
-
-  my $feat = $args[$idx];
-  $idx++;
-
-  print "xtract -pattern INSDSeq -ACCN INSDSeq_accession-version \\\n";
-  print "  -group INSDFeature \\\n";
-
-  my @itms = split (' ', $feat);
-  my $j = 0;
-  foreach $itm (@itms) {
-    if ( $j == 0 ) {
-      print "    -match \"INSDFeature_key:$itm\" \\\n";
-    } else {
-      print "      -or \"INSDFeature_key:$itm\" \\\n";
-    }
-    $j++;
-  }
-
-  my $k = 0;
-  for ( my $i = $idx; $i < $max; $i++ ) {
-
-    # look for + in front of qualifier name (undocumented)
-
-    my $qual = $args[$i];
-
-    if ( $qual =~ /^\+(.+)/ ) {
-      $qual = $1;
-      if ( $qual =~ /^%(.+)/ ) {
-        $qual = $1;
-      }
-      if ( $k == 0 ) {
-        print "    -match \"INSDQualifier_name:$qual\"";
-        print " \\\n";
-      } else {
-        print "      -and \"INSDQualifier_name:$qual\"";
-        print " \\\n";
-      }
-      $k++;
-    }
-  }
-
-  if ( $partial == 1 ) {
-    print "    -avoid INSDFeature_partial5 -and INSDFeature_partial3 \\\n";
-  } elsif ( $partial == -1 ) {
-    print "    -match INSDFeature_partial5 -or INSDFeature_partial3 \\\n";
-  }
-
-  print "    -pfx \"\\n\" -element \"&ACCN\" \\\n";
-
-  for ( my $i = $idx; $i < $max; $i++ ) {
-
-    # read qualifier names
-
-    my $qual = $args[$i];
-    if ( $qual =~ /^\+(.+)/ ) {
-      $qual = $1;
-    }
-
-    print "    -block INSDQualifier";
-
-    if ( $qual =~ /^%(.+)/ ) {
-      $qual = $1;
-      print " -match \"INSDQualifier_name:$qual\"";
-      print " -element \"\%INSDQualifier_value\"";
-    } else {
-      print " -match \"INSDQualifier_name:$qual\"";
-      print " -element INSDQualifier_value";
-    }
-
-    if ( $i == $max - 1 ) {
-      print " | \\\n";
-    } else {
-      print " \\\n";
-    }
-  }
-}
-
 sub process_insd {
 
   # ... | xtract -insd [+/-] mat_peptide "%peptide" product peptide
 
+  my $quot = shift (@_);
   my @args = @{shift (@_)};
 
   my $max = scalar @args;
 
   my @working = ();
 
-  # read feature key
-
-  my $idx = 1;
-  my $partial = 0;
-
-  my $plusminus = $args[1];
-  if ( $plusminus eq "+" or $plusminus eq "complete" ) {
-    $partial = 1;
-    $idx++;
-  } elsif ( $plusminus eq "-" or $plusminus eq "partial" ) {
-    $partial = -1;
-    $idx++;
-  }
-
-  my $feat = $args[$idx];
-  $idx++;
+  # print common arguments
 
   push (@working, "-pattern");
   push (@working, "INSDSeq");
   push (@working, "-ACCN");
   push (@working, "INSDSeq_accession-version");
+
+  # collect descriptors
+
+  if ( $args[1] =~ /INSD/ ) {
+
+    push (@working, "-pfx");
+    push (@working, "$quot\\n$quot");
+    push (@working, "-element");
+    push (@working, "$quot\&ACCN$quot");
+
+    for ( my $i = 1; $i < $max; $i++ ) {
+      my $val = $args[$i];
+
+      push (@working, "-block");
+      push (@working, "INSDSeq");
+      push (@working, "-element");
+      push (@working, "$quot$val$quot");
+    }
+
+    return @working;
+  }
+
+  # collect qualifiers
+
+  my @qualifiers = ();
+  my @required = ();
+
+  my $feat = "";
+  my $partial = 0;
+
+  for ( my $i = 1; $i < $max; $i++ ) {
+    my $val = $args[$i];
+
+    if ( $feat eq "" ) {
+      if ( $val eq "+" or $val eq "complete" ) {
+        $partial = 1;
+      } elsif ( $val eq "-" or $val eq "partial" ) {
+        $partial = -1;
+      } else {
+        $feat = $val;
+      }
+    } else {
+      if ( $val =~ /^\+(.+)/ ) {
+        $val = $1;
+        push (@required, $val);
+      }
+      push (@qualifiers, $val);
+    }
+  }
+
   push (@working, "-group");
   push (@working, "INSDFeature");
-
-  my @itms = split (' ', $feat);
-  my $j = 0;
-  foreach $itm (@itms) {
-    if ( $j == 0 ) {
-      push (@working, "-match");
-      push (@working, "INSDFeature_key:$itm");
-    } else {
-      push (@working, "-or");
-      push (@working, "INSDFeature_key:$itm");
-    }
-    $j++;
-  }
-
-  my $k = 0;
-  for ( my $i = $idx; $i < $max; $i++ ) {
-    my $qual = $args[$i];
-    if ( $qual =~ /^\+(.+)/ ) {
-      $qual = $1;
-      if ( $qual =~ /^%(.+)/ ) {
-        $qual = $1;
-      }
-      if ( $k == 0 ) {
-        push (@working, "-match");
-        push (@working, "INSDQualifier_name:$qual");
-      } else {
-        push (@working, "-and");
-        push (@working, "INSDQualifier_name:$qual");
-      }
-      $k++;
-    }
-  }
+  push (@working, "-match");
+  push (@working, "INSDFeature_key:$feat");
 
   if ( $partial == 1 ) {
     push (@working, "-avoid");
@@ -1708,34 +1616,42 @@ sub process_insd {
     push (@working, "INSDFeature_partial3");
   }
 
+  my $cmd = "-match";
+  foreach my $val (@required) {
+    push (@working, "$cmd");
+    push (@working, "INSDQualifier_name:$val");
+    $cmd = "-and";
+  }
+
   push (@working, "-pfx");
-  push (@working, "\\n");
+  push (@working, "$quot\\n$quot");
   push (@working, "-element");
-  push (@working, "&ACCN");
+  push (@working, "$quot&ACCN$quot");
 
-  for ( my $i = $idx; $i < $max; $i++ ) {
-
-    # read qualifier names
-
-    my $qual = $args[$i];
-    if ( $qual =~ /^\+(.+)/ ) {
-      $qual = $1;
-    }
-
-    push (@working, "-block");
-    push (@working, "INSDQualifier");
-
-    if ( $qual =~ /^%(.+)/ ) {
-      $qual = $1;
-      push (@working, "-match");
-      push (@working, "INSDQualifier_name:$qual");
+  foreach my $val (@qualifiers) {
+    if ( $val =~ /INSD/ ) {
+      push (@working, "-block");
+      push (@working, "INSDFeature");
       push (@working, "-element");
-      push (@working, "\%INSDQualifier_value");
+      push (@working, "$quot$val$quot");
+
     } else {
-      push (@working, "-match");
-      push (@working, "INSDQualifier_name:$qual");
-      push (@working, "-element");
-      push (@working, "INSDQualifier_value");
+
+      push (@working, "-block");
+      push (@working, "INSDQualifier");
+
+      if ( $val =~ /^%(.+)/ ) {
+        $val = $1;
+        push (@working, "-match");
+        push (@working, "INSDQualifier_name:$val");
+        push (@working, "-element");
+        push (@working, "$quot\%INSDQualifier_value$quot");
+      } else {
+        push (@working, "-match");
+        push (@working, "INSDQualifier_name:$val");
+        push (@working, "-element");
+        push (@working, "INSDQualifier_value");
+      }
     }
   }
 
@@ -1949,18 +1865,30 @@ sub xtract {
     $compress_spaces = false;
   }
 
-  # -insd without piped input will generate an extraction script
-  # -insd with piped input will dynamically execute the extraction
+  # -insd to simplify extraction of INSDSeq qualifiers
 
   if ( $max > 0 and $ARGV[0] eq "-insd" ) {
-    if ( $max < 3) {
+    if ( $max < 3 and $ARGV[1] !~ /INSD/) {
       print STDERR "Must supply a feature key and at least one qualifier name\n";
       return;
+
     } elsif ( -t STDIN ) {
-      generate_insd ( \@ARGV );
+
+      # -insd without piped input will generate an extraction script
+
+      @ARGV = process_insd ( "\"", \@ARGV );
+      print "xtract ";
+      foreach $itm (@ARGV) {
+        print "$itm ";
+      }
+      print "| \\\n";
       return;
+
     } else {
-      @ARGV = process_insd ( \@ARGV );
+
+      # -insd with piped input will dynamically execute the extraction
+
+      @ARGV = process_insd ( "", \@ARGV );
       $max = scalar @ARGV;
     }
   }

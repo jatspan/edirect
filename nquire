@@ -49,7 +49,7 @@ use constant true  => 1;
 
 # nquire version number
 
-$version = "1.50";
+$version = "1.60";
 
 # utility subroutines
 
