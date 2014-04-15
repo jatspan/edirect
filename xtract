@@ -1730,19 +1730,21 @@ sub process_fuse {
   my @args = @{shift (@_)};
 
   my $max = scalar @args;
+  if ( $max < 2 ) {
+    die "Need argument for database\n";
+  }
+  my $db = $args[1];
 
   my $thisline = "";
   my $laststr = "";
   my $str = "";
   my $uid = "";
+  my $uidlist = "";
   my $count = 0;
-  my $is_first = true;
-  my $db = "pubmed";
 
-  if ( $max == 1 ) {
-    $db = $args[1];
-  }
-  my $pfx = "<p/><a href=\"http://www.ncbi.nlm.nih.gov/$db/";
+  my $base = "http://www.ncbi.nlm.nih.gov";
+
+  my $pfx = "";
 
   while ($thisline = <STDIN>) {
     $thisline =~ s/\r//;
@@ -1752,27 +1754,24 @@ sub process_fuse {
       $uid = $1;
       $str = $2;
 
-      if ( $is_first ) {
-        print "<p/>";
-      }
-
-      if ( $str ne $laststr and $laststr ne "" ) {
+      if ( lc ($str) ne lc ($laststr) and $laststr ne "" ) {
         $laststr =~ s/\t/, /g;
-        print "\">($count)</a> - $laststr\n";
-        $pfx = "<p/><a href=\"http://www.ncbi.nlm.nih.gov/$db/";
+        print "<p>(<a href=\"$base/$db/$uidlist\"> $count </a>) - $laststr</p>\n";
+        $pfx = "";
         $count = 0;
+        $uidlist = "";
       }
       $laststr = $str;
-      print "$pfx$uid";
+
+      $uidlist .= "$pfx$uid";
       $pfx = ",";
       $count++;
-      $is_first = false;
     }
   }
 
   if ( $laststr ne "" ) {
     $laststr =~ s/\t/, /g;
-    print "\">($count)</a> - $laststr\n";
+    print "<p>(<a href=\"$base/$db/$uidlist\"> $count </a>) - $laststr</p>\n";
   }
 }
 
