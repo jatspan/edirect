@@ -42,6 +42,7 @@ use warnings;
 use Data::Dumper;
 use Encode;
 use Getopt::Long;
+use HTML::Entities;
 use LWP::Simple;
 use LWP::UserAgent;
 use Net::hostent;
@@ -75,7 +76,7 @@ $esummary = "esummary.fcgi";
 
 # EDirect version number
 
-$version = "1.60";
+$version = "1.70";
 
 # utility subroutines
 
@@ -1113,6 +1114,9 @@ sub esmry {
 
       Encode::_utf8_on($data);
 
+      $data =~ s/&amp;#/&#/g;
+      HTML::Entities::decode_entities($data);
+
       print "$data";
     }
 
@@ -1218,6 +1222,9 @@ sub esmry {
       $data =~ s/<DocumentSummary uid=\"(\d+)\">/<DocumentSummary><Id>$1<\/Id>/g;
 
       Encode::_utf8_on($data);
+
+      $data =~ s/&amp;#/&#/g;
+      HTML::Entities::decode_entities($data);
 
       print "$data";
     }
@@ -1393,6 +1400,49 @@ sub eftch {
   }
 
   if ( $dbase ne "" and ( $type eq "URL" or $type eq "url" ) ) {
+
+    if ( $id ne "" ) {
+
+      my @ids = split (',', $id);
+      $url = "http://www.ncbi.nlm.nih.gov/";
+      $url .= "$dbase/";
+      $pfx = "";
+      foreach $uid (@ids) {
+        $url .= "$pfx$uid";
+        $pfx = ",";
+      }
+      print "$url\n";
+
+      return;
+    }
+
+    if ( $web eq "" ) {
+      die "WebEnv value not found in fetch input\n";
+    }
+
+    if ( $pipe ) {
+      write_edirect ( $dbase, $web, $key, $num, $stp, $err, $tool, $email );
+    }
+
+    # use larger chunk for URL format
+    $chunk = 1000;
+    for ( $start = $min; $start < $max; $start += $chunk ) {
+
+      my @ids = get_uids ( $dbase, $web, $key, $start, $chunk, $max, $tool, $email );
+      $url = "http://www.ncbi.nlm.nih.gov/";
+      $url .= "$dbase/";
+      $pfx = "";
+      foreach $uid (@ids) {
+        $url .= "$pfx$uid";
+        $pfx = ",";
+      }
+      print "$url\n";
+    }
+
+    return;
+  }
+
+  if ( $dbase ne "" and ( $type eq "URLS" or $type eq "urls" ) ) {
 
     if ( $id ne "" ) {
 
