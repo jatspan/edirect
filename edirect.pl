@@ -1114,7 +1114,7 @@ sub esmry {
 
       Encode::_utf8_on($data);
 
-      $data =~ s/&amp;#/&#/g;
+      $data =~ s/&amp;/&/g;
       HTML::Entities::decode_entities($data);
 
       print "$data";
@@ -1223,7 +1223,7 @@ sub esmry {
 
       Encode::_utf8_on($data);
 
-      $data =~ s/&amp;#/&#/g;
+      $data =~ s/&amp;/&/g;
       HTML::Entities::decode_entities($data);
 
       print "$data";
