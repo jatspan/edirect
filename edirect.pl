@@ -2600,6 +2600,10 @@ sub epost {
 
         $ids = join (',', @chunk);
 
+        if ( ! $just_num ) {
+          die "Non-numeric value found in post input\n";
+        }
+
         ( $web, $key ) = post_chunk ( $dbase, $web, $key, $tool, $email, $ids, "" );
 
         $combo .= $pfx . "#" . $key;
