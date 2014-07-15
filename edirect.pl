@@ -76,7 +76,7 @@ $esummary = "esummary.fcgi";
 
 # EDirect version number
 
-$version = "1.70";
+$version = "1.80";
 
 # utility subroutines
 
@@ -382,11 +382,11 @@ sub get_count {
   $url .= "&edirect=$version";
 
   if ( $tulx eq "" ) {
-    $tulx = "edirect";
+    $tulx = "entrez-direct";
   }
   if ( $tulx ne "" ) {
     $tulx =~ s/\s+/\+/g;
-    $url .= "&tool=$tulx";
+    $url .= "&tool=$tulx-count";
   }
 
   if ( $emlx eq "" ) {
@@ -2614,14 +2614,10 @@ sub epost {
 
   } else {
 
-    while ( @rest ) {
-      my @chunk = splice(@rest, 0, 2000);
+    if ( $id ne "" ) {
 
+      my @chunk = split (',', $id);
       $query = join (' OR ', @chunk);
-
-      if ( $query eq "" ) {
-        die "Must pipe data into stdin\n";
-      }
 
       if ( $field eq "ACCN" or $field eq "accn" or $field eq "ACC" or $field eq "acc" ) {
         if ( $dbase eq "nucleotide" or $dbase eq "nuccore" or $dbase eq "est" or
@@ -2629,8 +2625,6 @@ sub epost {
           $query =~ s/\./_/g;
           $field = "ACCN";
         }
-      } elsif ( ! $just_num ) {
-        die "Non-numeric value found in post input\n";
       }
 
       $query .= " [$field]";
@@ -2640,6 +2634,36 @@ sub epost {
       $combo .= $pfx . "#" . $key;
       $pfx = " OR ";
       $loops++;
+
+    } else {
+
+      while ( @rest ) {
+        my @chunk = splice(@rest, 0, 2000);
+
+        $query = join (' OR ', @chunk);
+
+        if ( $query eq "" ) {
+          die "Must pipe data into stdin\n";
+        }
+
+        if ( $field eq "ACCN" or $field eq "accn" or $field eq "ACC" or $field eq "acc" ) {
+          if ( $dbase eq "nucleotide" or $dbase eq "nuccore" or $dbase eq "est" or
+               $dbase eq "gss" or $dbase eq "protein" ) {
+            $query =~ s/\./_/g;
+            $field = "ACCN";
+          }
+        } elsif ( ! $just_num ) {
+          die "Non-numeric value found in post input\n";
+        }
+
+        $query .= " [$field]";
+
+        ( $web, $key ) = post_chunk ( $dbase, $web, $key, $tool, $email, "", $query );
+
+        $combo .= $pfx . "#" . $key;
+        $pfx = " OR ";
+        $loops++;
+      }
     }
   }
 
