@@ -958,7 +958,12 @@ sub efilt {
   adjust_base ();
 
   if ( $err ne "" ) {
-    die "ERROR in filt input: $err\n\n";
+    write_edirect ( "", "", "", "", "", $err, "", "" );
+    close (STDOUT);
+    if ( ! $silent ) {
+      die "ERROR in filt input: $err\n\n";
+    }
+    return;
   }
 
   if ( $tuul ne "" ) {
@@ -1033,7 +1038,10 @@ sub efilt {
   if ( $err ne "" ) {
     write_edirect ( "", "", "", "", "", $err, "", "" );
     close (STDOUT);
-    die "ERROR in filt output: $err\nURL: $arg\nResult: $output\n\n";
+    if ( ! $silent) {
+      die "ERROR in filt output: $err\nURL: $arg\nResult: $output\n\n";
+    }
+    return;
   }
 
   if ( $web eq "" ) {
@@ -1131,6 +1139,12 @@ sub esmry {
   test_edirect ( $dbase, $web, $key, $num, "summary" );
 
   $stpminusone = $stp - 1;
+
+  if ( $max == 0 ) {
+    if ( $silent ) {
+      return;
+    }
+  }
 
   # use larger chunk for document summaries
   $chunk = 1000;
@@ -1308,7 +1322,10 @@ sub eftch {
   adjust_base ();
 
   if ( $err ne "" ) {
-    die "ERROR in fetch input: $err\n\n";
+    if ( ! $silent ) {
+      die "ERROR in fetch input: $err\n\n";
+    }
+    return;
   }
 
   if ( $dbase eq "" ) {
@@ -1386,6 +1403,12 @@ sub eftch {
       write_edirect ( $dbase, $web, $key, $num, $stp, $err, $tool, $email );
     }
 
+    if ( $max == 0 ) {
+      if ( $silent ) {
+        return;
+      }
+    }
+
     # use larger chunk for UID format
     $chunk = 1000;
     for ( $start = $min; $start < $max; $start += $chunk ) {
@@ -1424,6 +1447,12 @@ sub eftch {
       write_edirect ( $dbase, $web, $key, $num, $stp, $err, $tool, $email );
     }
 
+    if ( $max == 0 ) {
+      if ( $silent ) {
+        return;
+      }
+    }
+
     # use larger chunk for URL format
     $chunk = 1000;
     for ( $start = $min; $start < $max; $start += $chunk ) {
@@ -1460,6 +1489,12 @@ sub eftch {
 
     if ( $pipe ) {
       write_edirect ( $dbase, $web, $key, $num, $stp, $err, $tool, $email );
+    }
+
+    if ( $max == 0 ) {
+      if ( $silent ) {
+        return;
+      }
     }
 
     # use larger chunk for URL format
@@ -1530,6 +1565,12 @@ sub eftch {
   test_edirect ( $dbase, $web, $key, $num, "fetch" );
 
   $stpminusone = $stp - 1;
+
+  if ( $max == 0 ) {
+    if ( $silent ) {
+      return;
+    }
+  }
 
   # use small chunk because fetched records could be quite large
   $chunk = 100;
@@ -1839,7 +1880,10 @@ sub process_history_link {
   if ( $err ne "" ) {
     write_edirect ( "", $wb, "", "", "", $err, "", "" );
     close (STDOUT);
-    die "ERROR in link output: $err\nWebEnv: $wb\nURL: $arg\nResult: $output\n\n";
+    if ( ! $silent ) {
+      die "ERROR in link output: $err\nWebEnv: $wb\nURL: $arg\nResult: $output\n\n";
+    }
+    return;
   }
 
   if ( $web eq "" ) {
@@ -1898,6 +1942,14 @@ sub batch_elink {
 
   my %seen = ();
   my @uniq = ();
+
+  if ( $num == 0 ) {
+    if ( $silent ) {
+      write_edirect ( "", "", "", "", "", $err, "", "" );
+      close (STDOUT);
+      return;
+    }
+  }
 
   $chunk = 200;
   for ( $start = 0; $start < $num; $start += $chunk ) {
@@ -2089,7 +2141,12 @@ sub elink {
   adjust_base ();
 
   if ( $err ne "" ) {
-    die "ERROR in link input: $err\n\n";
+    write_edirect ( "", "", "", "", "", $err, "", "" );
+    close (STDOUT);
+    if ( ! $silent ) {
+      die "ERROR in link input: $err\n\n";
+    }
+    return;
   }
 
   if ( $dbase eq "" ) {
@@ -2176,6 +2233,12 @@ sub elink {
   if ( $cmd ne "neighbor_history" ) {
 
     # if not neighbor_history, write eLinkResult XML instead of ENTREZ_DIRECT
+
+    if ( $num == 0 ) {
+      if ( $silent ) {
+        return;
+      }
+    }
 
     $chunk = 200;
     for ( $start = 0; $start < $num; $start += $chunk ) {
