@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "1.90";
+$version = "2.00";
 
 # initialize memory hash
 
