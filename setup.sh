@@ -21,14 +21,5 @@ then
 fi
 
 echo ""
-echo "Welcome to Entrez Direct"
-echo ""
-echo "Please close this terminal window and open a new one to start working with Entrez Direct."
-echo ""
-echo "If the 'esearch -version' command reports \"command not found\", you may need to add the"
-echo "following line to the (invisible) .bash_profile configuration file in your home directory:"
-echo ""
-echo "  export PATH=\$PATH:$DIR"
-echo ""
-echo "editing it if necessary to indicate the exact path to the edirect directory."
+echo "Entrez Direct has been successfully installed and configured."
 echo ""
