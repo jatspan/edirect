@@ -21,5 +21,5 @@ then
 fi
 
 echo ""
-echo "Entrez Direct has been successfully installed and configured."
+echo "ENTREZ DIRECT HAS BEEN SUCCESSFULLY INSTALLED AND CONFIGURED"
 echo ""
