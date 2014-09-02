@@ -37,6 +37,27 @@
 # use strict;
 use warnings;
 
+my ($LibDir, $ScriptName);
+
+use File::Spec;
+
+BEGIN
+{
+  my $Volume;
+  ($Volume, $LibDir, $ScriptName) = File::Spec->splitpath($0);
+  $LibDir = File::Spec->catpath($Volume, $LibDir, '');
+  if (my $RealPathname = eval {readlink $0}) {
+    do {
+      $RealPathname = File::Spec->rel2abs($RealPathname, $LibDir);
+      ($Volume, $LibDir, undef) = File::Spec->splitpath($RealPathname);
+      $LibDir = File::Spec->catpath($Volume, $LibDir, '')
+    } while ($RealPathname = eval {readlink $RealPathname});
+  } else {
+    $LibDir = File::Spec->rel2abs($LibDir)
+  }
+}
+use lib $LibDir;
+
 # usage - edirect.pl -function arguments
 
 use Data::Dumper;
