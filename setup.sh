@@ -11,6 +11,7 @@ EOF
 mkdir -p "$DIR/_cpan/CPAN"
 echo '1;' >> "$DIR/_cpan/CPAN/MyConfig.pm"
 perl -I"$DIR/_cpan" "$DIR/setup-deps.pl" </dev/null >"$DIR/setup-deps.log" 2>&1
+rm -rf "$DIR/_cpan"
 
 if [ ! -e "$HOME/.bashrc" ]
 then

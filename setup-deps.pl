@@ -15,10 +15,11 @@ BEGIN {
 
     if ( ! exists $CPAN::Config{cpan_home} ) {
         $CPAN::Config = {
-            'auto_commit' => 1,
-            'cpan_home'   => "$root/_cpan",
-            'ftp_passive' => 1,
-            'urllist'     => [@CPAN::Defaultsites]
+            'auto_commit'  => 1,
+            'cpan_home'    => "$root/_cpan",
+            'ftp_passive'  => 1,
+            'install_help' => 'manual',
+            'urllist'      => [@CPAN::Defaultsites]
         };
     }
     # $CPAN::DEBUG ||= $CPAN::DEBUG{'FTP'};
@@ -35,6 +36,7 @@ BEGIN {
     }
 }
 
+use lib "$root/aux/lib/perl5";
 use local::lib("$root/aux", '--no-create');
 if ( ! CPAN::Shell->expandany('LWP')->inst_file ) {
     CPAN::Shell->install('Bundle::LWP');
