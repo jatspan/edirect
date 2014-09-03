@@ -55,6 +55,7 @@ BEGIN
   } else {
     $LibDir = File::Spec->rel2abs($LibDir)
   }
+  $LibDir .= '/aux/lib/perl5';
 }
 use lib $LibDir;
 

@@ -2,6 +2,16 @@
 
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 
+cat <<EOF
+
+Trying to establish local installations of any missing Perl modules
+(as logged in $DIR/setup-deps.log).
+Please be patient, as this step may take a little while.
+EOF
+mkdir -p "$DIR/_cpan/CPAN"
+echo '1;' >> "$DIR/_cpan/CPAN/MyConfig.pm"
+perl -I"$DIR/_cpan" "$DIR/setup-deps.pl" </dev/null >"$DIR/setup-deps.log" 2>&1
+
 if [ ! -e "$HOME/.bashrc" ]
 then
   echo 'source ~/.bash_profile' > $HOME/.bashrc
