@@ -94,6 +94,7 @@ $einfo    = "einfo.fcgi";
 $elink    = "elink.fcgi";
 $epost    = "epost.fcgi";
 $esearch  = "esearch.fcgi";
+$espell   = "espell.fcgi";
 $esummary = "esummary.fcgi";
 
 # EDirect version number
@@ -2787,6 +2788,96 @@ sub epost {
   write_edirect ( $dbase, $web, $key, $num, $stp, $err, $tool, $email );
 }
 
+# espel performs an ESpell search
+
+my $spell_help = qq{
+-db       Database name
+-query    Query string
+
+};
+
+sub espel {
+
+  # ... | edirect.pl -spell -db pubmed -query "asthmaa OR alergies" | ...
+
+  clearflags ();
+
+  GetOptions (
+    "db=s" => \$db,
+    "query=s" => \$query,
+    "email=s" => \$emaddr,
+    "tool=s" => \$tuul,
+    "help" => \$help,
+    "silent" => \$silent,
+    "verbose" => \$verbose,
+    "debug" => \$debug,
+    "log" => \$log,
+    "http=s" => \$http,
+    "alias=s" => \$alias,
+    "base=s" => \$basx
+  );
+
+  if ( $help ) {
+    print "espell $version\n";
+    print $spell_help;
+    return;
+  }
+
+  # convert spaces between UIDs to commas
+
+  $id =~ s/ /,/g;
+  $id =~ s/,,/,/g;
+
+  if ( -t STDIN and not @ARGV ) {
+  } else {
+    ( $dbase, $web, $key, $num, $stp, $err, $tool, $email, $just_num, @rest ) = read_edirect ();
+  }
+
+  read_aliases ();
+  adjust_base ();
+
+  if ( $err ne "" ) {
+    die "ERROR in spell input: $err\n\n";
+  }
+
+  if ( $dbase eq "" ) {
+    $dbase = $db;
+  }
+
+  if ( $dbase eq "" ) {
+    die "Must supply -db database on command line\n";
+  }
+
+  if ( $tuul ne "" ) {
+    $tool = $tuul;
+  }
+  if ( $emaddr ne "" ) {
+    $email = $emaddr;
+  }
+
+  binmode STDOUT, ":utf8";
+
+  if ( $query eq "" ) {
+    die "Must supply -query term expression on command line\n";
+  }
+
+  $url = $base . $espell;
+
+  $enc = uri_escape($query);
+  $arg = "db=$dbase&term=$enc";
+
+  $wb = $web;
+
+  $data = do_post ($url, $arg, $tool, $email, true);
+
+  Encode::_utf8_on($data);
+
+  $data =~ s/&amp;/&/g;
+  HTML::Entities::decode_entities($data);
+
+  print "$data";
+}
+
 # eprxy reads a file of query proxies, can also pipe from stdin
 
 my $prxy_help = qq{
@@ -3030,6 +3121,8 @@ if ( scalar @ARGV > 0 and $ARGV[0] eq "-version" ) {
   einfo ();
 } elsif ( $fnc eq "-post" ) {
   epost ();
+} elsif ( $fnc eq "-spell" ) {
+  espel ();
 } elsif ( $fnc eq "-proxy" ) {
   eprxy ();
 } elsif ( $fnc eq "-contact" ) {
