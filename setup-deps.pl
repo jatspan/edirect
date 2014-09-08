@@ -41,3 +41,6 @@ use local::lib("$root/aux", '--no-create');
 if ( ! CPAN::Shell->expandany('LWP')->inst_file ) {
     CPAN::Shell->install('Bundle::LWP');
 }
+if ( ! CPAN::Shell->expandany('Time::HiRes')->inst_file ) {
+    CPAN::Shell->install('Time::HiRes');
+}
