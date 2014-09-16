@@ -1971,91 +1971,122 @@ sub xtract {
     my $print_head = false;
     my $print_tail = false;
 
-    while ( defined($thisline = <STDIN>) ) {
-      $thisline =~ s/\r//g;
-      $thisline =~ s/\n//g;
-      $thisline =~ s/\t//g;
-      if ( $compress_spaces ) {
-        $thisline =~ s/ +/ /g;
-      }
-      $thisline =~ s/> +</></g;
+    my $pfx = "";
+    my $sfx = "";
 
-      my @tokens = split (/(?<=>)(?=<)/, $thisline);
-      foreach $tkn (@tokens) {
-        if ( $tkn =~ /^ +(.+)$/ ) {
-          $tkn = $1;
+    my $go_on = true;
+
+    for ( my $i = 1; $i < $max; $i++ ) {
+
+      if ( $ARGV[$i] eq "-pfx" ) {
+        $i++;
+        $pfx = convert_slash ( $ARGV[$i] );
+      } elsif ( $ARGV[$i] eq "-sfx" ) {
+        $i++;
+        $sfx = convert_slash ( $ARGV[$i] );
+      }
+    }
+
+    while ( $go_on ) {
+
+      $thisline = "";
+      if ( $pfx ne "" ) {
+        $thisline = $pfx;
+        $pfx = "";
+      } elsif ( defined($thisline = <STDIN>) ) {
+      } elsif ( $sfx ne "" ) {
+        $thisline = $sfx;
+        $sfx = "";
+      } else {
+        $go_on = false;
+      }
+
+      if ( $go_on and $thisline ne "" ) {
+        $thisline =~ s/\r//g;
+        $thisline =~ s/\n//g;
+        $thisline =~ s/\t//g;
+        if ( $compress_spaces ) {
+          $thisline =~ s/ +/ /g;
         }
-        if ( $tkn =~ /^(.+) +$/ ) {
-          $tkn = $1;
-        }
-        if ( $lvl < 0 ) {
-          # ignore remainder if level drops below zero
-        } elsif ( $tkn =~ /^<\?xml/ ) {
-          if ( $xml_ok ) {
-            # only print first xml line
-            print "$tkn\n";
-            $xml_ok = false;
+        $thisline =~ s/> +</></g;
+
+        my @tokens = split (/(?<=>)(?=<)/, $thisline);
+        foreach $tkn (@tokens) {
+          if ( $tkn =~ /^ +(.+)$/ ) {
+            $tkn = $1;
           }
-        } elsif ( $tkn =~ /^<!DOCTYPE (\S+)/ ) {
-          if ( $doctype_ok ) {
-            # only print first DOCTYPE line, extract root token
-            $root_token = $1;
-            print "$tkn\n";
-            $doctype_ok = false;
-            $print_head = true;
+          if ( $tkn =~ /^(.+) +$/ ) {
+            $tkn = $1;
           }
-        } elsif ( $tkn =~ /^<.+?>.+?<\/(.+?)>$/ ) {
-          # content-containing tag
-          if ( $tkn =~ /^<(\S+).*?>.*>$/ ) {
+          if ( $lvl < 0 ) {
+            # ignore remainder if level drops below zero
+          } elsif ( $tkn =~ /^<\?xml/ ) {
+            if ( $xml_ok ) {
+              # only print first xml line
+              print "$tkn\n";
+              $xml_ok = false;
+            }
+          } elsif ( $tkn =~ /^<!DOCTYPE (\S+)/ ) {
+            if ( $doctype_ok ) {
+              # only print first DOCTYPE line, extract root token
+              $root_token = $1;
+              print "$tkn\n";
+              $doctype_ok = false;
+              $print_head = true;
+            }
+          } elsif ( $tkn =~ /^<.+?>.+?<\/(.+?)>$/ ) {
+            # content-containing tag
+            if ( $tkn =~ /^<(\S+).*?>.*>$/ ) {
+              $lvl++;
+              $dpth++;
+              for ( $i = 1; $i < $dpth; $i++ ) {
+                print "  ";
+              }
+              print "$tkn\n";
+              $lvl--;
+              $dpth--;
+            }
+          } elsif ( $tkn =~ /^<.+?\/>$/ ) {
+            # self-closing token
+            if ( $tkn =~ /^<(\S+).*?\/>$/ ) {
+              $lvl++;
+              $dpth++;
+              for ( $i = 1; $i < $dpth; $i++ ) {
+                print "  ";
+              }
+              print "$tkn\n";
+              $lvl--;
+              $dpth--;
+            }
+          } elsif ( $tkn =~ /^<[^\/]/ ) {
+            # open tag increments level
             $lvl++;
             $dpth++;
-            for ( $i = 1; $i < $dpth; $i++ ) {
-              print "  ";
+            if ( $tkn eq "<$root_token>" ) {
+              if ( $print_head ) {
+                print "<$root_token>\n";
+                $print_head = false;
+                $print_tail = true;
+              }
+            } else {
+              if ( $tkn =~ /^<(\S+).*?>$/ ) {
+                for ( $i = 1; $i < $dpth; $i++ ) {
+                  print "  ";
+                }
+                print "$tkn\n";
+              }
             }
-            print "$tkn\n";
-            $lvl--;
-            $dpth--;
-          }
-        } elsif ( $tkn =~ /^<.+?\/>$/ ) {
-          # self-closing token
-          if ( $tkn =~ /^<(\S+).*?\/>$/ ) {
-            $lvl++;
-            $dpth++;
-            for ( $i = 1; $i < $dpth; $i++ ) {
-              print "  ";
-            }
-            print "$tkn\n";
-            $lvl--;
-            $dpth--;
-          }
-        } elsif ( $tkn =~ /^<[^\/]/ ) {
-          # open tag increments level
-          $lvl++;
-          $dpth++;
-          if ( $tkn eq "<$root_token>" ) {
-            if ( $print_head ) {
-              print "<$root_token>\n";
-              $print_head = false;
-              $print_tail = true;
-            }
-          } else {
-            if ( $tkn =~ /^<(\S+).*?>$/ ) {
+          } elsif ( $tkn =~ /^<\// ) {
+            # close tag decrements level
+            if ( $tkn ne "</$root_token>" ) {
               for ( $i = 1; $i < $dpth; $i++ ) {
                 print "  ";
               }
               print "$tkn\n";
             }
+            $lvl--;
+            $dpth--;
           }
-        } elsif ( $tkn =~ /^<\// ) {
-          # close tag decrements level
-          if ( $tkn ne "</$root_token>" ) {
-            for ( $i = 1; $i < $dpth; $i++ ) {
-              print "  ";
-            }
-            print "$tkn\n";
-          }
-          $lvl--;
-          $dpth--;
         }
       }
     }
