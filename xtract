@@ -1962,7 +1962,6 @@ sub xtract {
   if ( $max > 0 and $ARGV[0] eq "-format" ) {
 
     my $lvl = 0;
-    my $dpth = 0;
 
     my $xml_ok = true;
     my $doctype_ok = true;
@@ -1971,10 +1970,14 @@ sub xtract {
     my $print_head = false;
     my $print_tail = false;
 
+    my $xml = "";
+    my $doctype = "";
     my $pfx = "";
     my $sfx = "";
 
     my $go_on = true;
+
+    # support -pfx, -sfx, -xml, and -doctype arguments (undocumented)
 
     for ( my $i = 1; $i < $max; $i++ ) {
 
@@ -1984,13 +1987,25 @@ sub xtract {
       } elsif ( $ARGV[$i] eq "-sfx" ) {
         $i++;
         $sfx = convert_slash ( $ARGV[$i] );
+      } elsif ( $ARGV[$i] eq "-xml" ) {
+        $i++;
+        $xml = convert_slash ( $ARGV[$i] );
+      } elsif ( $ARGV[$i] eq "-doctype" ) {
+        $i++;
+        $doctype = convert_slash ( $ARGV[$i] );
       }
     }
 
     while ( $go_on ) {
 
       $thisline = "";
-      if ( $pfx ne "" ) {
+      if ( $xml ne "" ) {
+        $thisline = $xml;
+        $xml = "";
+      } elsif ( $doctype ne "" ) {
+        $thisline = $doctype;
+        $doctype = "";
+      } elsif ( $pfx ne "" ) {
         $thisline = $pfx;
         $pfx = "";
       } elsif ( defined($thisline = <STDIN>) ) {
@@ -2038,30 +2053,25 @@ sub xtract {
             # content-containing tag
             if ( $tkn =~ /^<(\S+).*?>.*>$/ ) {
               $lvl++;
-              $dpth++;
-              for ( $i = 1; $i < $dpth; $i++ ) {
+              for ( $i = 1; $i < $lvl; $i++ ) {
                 print "  ";
               }
               print "$tkn\n";
               $lvl--;
-              $dpth--;
             }
           } elsif ( $tkn =~ /^<.+?\/>$/ ) {
             # self-closing token
             if ( $tkn =~ /^<(\S+).*?\/>$/ ) {
               $lvl++;
-              $dpth++;
-              for ( $i = 1; $i < $dpth; $i++ ) {
+              for ( $i = 1; $i < $lvl; $i++ ) {
                 print "  ";
               }
               print "$tkn\n";
               $lvl--;
-              $dpth--;
             }
           } elsif ( $tkn =~ /^<[^\/]/ ) {
             # open tag increments level
             $lvl++;
-            $dpth++;
             if ( $tkn eq "<$root_token>" ) {
               if ( $print_head ) {
                 print "<$root_token>\n";
@@ -2070,7 +2080,7 @@ sub xtract {
               }
             } else {
               if ( $tkn =~ /^<(\S+).*?>$/ ) {
-                for ( $i = 1; $i < $dpth; $i++ ) {
+                for ( $i = 1; $i < $lvl; $i++ ) {
                   print "  ";
                 }
                 print "$tkn\n";
@@ -2079,13 +2089,12 @@ sub xtract {
           } elsif ( $tkn =~ /^<\// ) {
             # close tag decrements level
             if ( $tkn ne "</$root_token>" ) {
-              for ( $i = 1; $i < $dpth; $i++ ) {
+              for ( $i = 1; $i < $lvl; $i++ ) {
                 print "  ";
               }
               print "$tkn\n";
             }
             $lvl--;
-            $dpth--;
           }
         }
       }
