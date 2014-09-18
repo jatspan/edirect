@@ -2049,6 +2049,22 @@ sub xtract {
               $doctype_ok = false;
               $print_head = true;
             }
+          } elsif ( $tkn =~ /^<\?.+\?>$/ ) {
+            # processing instruction
+            $lvl++;
+            for ( $i = 1; $i < $lvl; $i++ ) {
+              print "  ";
+            }
+            print "$tkn\n";
+            $lvl--;
+          } elsif ( $tkn =~ /^<\!--.+-->$/ ) {
+            # comment
+            $lvl++;
+            for ( $i = 1; $i < $lvl; $i++ ) {
+              print "  ";
+            }
+            print "$tkn\n";
+            $lvl--;
           } elsif ( $tkn =~ /^<.+?>.+?<\/(.+?)>$/ ) {
             # content-containing tag
             if ( $tkn =~ /^<(\S+).*?>.*>$/ ) {
