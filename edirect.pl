@@ -153,6 +153,8 @@ sub clearflags {
   $stp = "";
   $strand = "";
   $tool = "";
+  $trim = false;
+  $trunc = false;
   $tuul = "";
   $type = "";
   $verbose = false;
@@ -3160,9 +3162,11 @@ sub esrch {
   GetOptions (
     "db=s" => \$db,
     "query=s" => \$query,
-    "split=s" => \$field,
     "drop" => \$drop,
+    "trim" => \$trim,
+    "trunc" => \$trunc,
     "spell" => \$spell,
+    "split=s" => \$field,
     "sort=s" => \$sort,
     "days=i" => \$rldate,
     "mindate=s" => \$mndate,
@@ -3230,12 +3234,35 @@ sub esrch {
     $query = remove_stop_words ($query);
   }
 
+  # trim words within parentheses (undocumented)
+  if ( $trim ) {
+    if ( $query =~ /^(.*)\(.+\)(.*)$/ ) {
+      $query = "$1 $2";
+    }
+  }
+
+  # truncate words at first parenthesis (undocumented)
+  if ( $trunc ) {
+    if ( $query =~ /^(.+)\(.*$/ ) {
+      $query = $1;
+    }
+  }
+
+  # remove leading, trailing, and multiple spaces
+  if ( $query =~ /^ +(.+)$/ ) {
+    $query = $1;
+  }
+  if ( $query =~ /^(.+) +$/ ) {
+    $query = $1;
+  }
+  $query =~ s/ +/ /g;
+
   # spell check each query word (undocumented)
   if ( $spell ) {
     $query = spell_check_query ($dbase, $query);
   }
 
-  # each query word is fielded (undocumented)
+  # force each query word to be separately fielded (undocumented)
   if ( $field ne "" ) {
     $query = field_each_word ($field, $query);
   }
