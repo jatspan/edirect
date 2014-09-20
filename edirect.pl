@@ -117,6 +117,7 @@ sub clearflags {
   $dbs = "";
   $dbto = "";
   $debug = false;
+  $drop = false;
   $dttype = "";
   $emaddr = "";
   $email = "";
@@ -148,6 +149,7 @@ sub clearflags {
   $seq_stop = 0;
   $silent = false;
   $sort = "";
+  $spell = false;
   $stp = "";
   $strand = "";
   $tool = "";
@@ -1452,7 +1454,7 @@ sub eftch {
       my @ids = split (',', $id);
       $url = "http://www.ncbi.nlm.nih.gov/";
       $url .= "$dbase/";
-      $pfx = "";
+      my $pfx = "";
       foreach $uid (@ids) {
         $url .= "$pfx$uid";
         $pfx = ",";
@@ -1483,7 +1485,7 @@ sub eftch {
       my @ids = get_uids ( $dbase, $web, $key, $start, $chunk, $max, $tool, $email );
       $url = "http://www.ncbi.nlm.nih.gov/";
       $url .= "$dbase/";
-      $pfx = "";
+      my $pfx = "";
       foreach $uid (@ids) {
         $url .= "$pfx$uid";
         $pfx = ",";
@@ -2866,8 +2868,6 @@ sub espel {
   $enc = uri_escape($query);
   $arg = "db=$dbase&term=$enc";
 
-  $wb = $web;
-
   $data = do_post ($url, $arg, $tool, $email, true);
 
   Encode::_utf8_on($data);
@@ -2954,6 +2954,203 @@ my $srch_help = qq{
 
 };
 
+sub field_each_word {
+
+  my $fld = shift (@_);
+  my $qury = shift (@_);
+
+  my @words = split (' ', $qury);
+  $qury = "";
+  my $pfx = "";
+
+  foreach $term (@words) {
+    $qury .= "$pfx$term [$fld]";
+    $pfx = " AND ";
+  }
+
+  return $qury;
+}
+
+sub spell_check_query {
+
+  my $db = shift (@_);
+  my $qury = shift (@_);
+
+  my $url = $base . $espell;
+
+  my $enc = uri_escape($query);
+  $arg = "db=$db&term=$enc";
+
+  my $data = do_post ($url, $arg, $tool, $email, true);
+
+  Encode::_utf8_on($data);
+
+  $data =~ s/&amp;/&/g;
+  HTML::Entities::decode_entities($data);
+
+  $qury = $1 if ( $data =~ /<CorrectedQuery>(.+)<\/CorrectedQuery>/ );
+
+  return $qury;
+}
+
+sub remove_stop_words {
+
+  my $qury = shift (@_);
+
+  my @stop_word_array = (
+    "a",
+    "about",
+    "again",
+    "all",
+    "almost",
+    "also",
+    "although",
+    "always",
+    "among",
+    "an",
+    "and",
+    "another",
+    "any",
+    "are",
+    "as",
+    "at",
+    "be",
+    "because",
+    "been",
+    "before",
+    "being",
+    "between",
+    "both",
+    "but",
+    "by",
+    "can",
+    "could",
+    "did",
+    "do",
+    "does",
+    "done",
+    "due",
+    "during",
+    "each",
+    "either",
+    "enough",
+    "especially",
+    "etc",
+    "for",
+    "found",
+    "from",
+    "further",
+    "had",
+    "has",
+    "have",
+    "having",
+    "here",
+    "how",
+    "however",
+    "i",
+    "if",
+    "in",
+    "into",
+    "is",
+    "it",
+    "its",
+    "itself",
+    "just",
+    "kg",
+    "km",
+    "made",
+    "mainly",
+    "make",
+    "may",
+    "mg",
+    "might",
+    "ml",
+    "mm",
+    "most",
+    "mostly",
+    "must",
+    "nearly",
+    "neither",
+    "no",
+    "nor",
+    "obtained",
+    "of",
+    "often",
+    "on",
+    "our",
+    "overall",
+    "perhaps",
+    "pmid",
+    "quite",
+    "rather",
+    "really",
+    "regarding",
+    "seem",
+    "seen",
+    "several",
+    "should",
+    "show",
+    "showed",
+    "shown",
+    "shows",
+    "significantly",
+    "since",
+    "so",
+    "some",
+    "such",
+    "than",
+    "that",
+    "the",
+    "their",
+    "theirs",
+    "them",
+    "then",
+    "there",
+    "therefore",
+    "these",
+    "they",
+    "this",
+    "those",
+    "through",
+    "thus",
+    "to",
+    "upon",
+    "use",
+    "used",
+    "using",
+    "various",
+    "very",
+    "was",
+    "we",
+    "were",
+    "what",
+    "when",
+    "which",
+    "while",
+    "with",
+    "within",
+    "without",
+    "would"
+  );
+
+  my @words = split (' ', $qury);
+  my $dropped = "";
+  my $pfx = "";
+
+  foreach $term (@words) {
+    if ( ! grep( /^$term$/, @stop_word_array ) ) {
+      $dropped .= "$pfx$term";
+      $pfx = " ";
+    }
+  }
+
+  if ( $dropped ne "" ) {
+    $qury = $dropped;
+  }
+
+  return $qury;
+}
+
 sub esrch {
 
   # ... | edirect.pl -search -db nucleotide -query "M6506* [ACCN] OR 1322283 [UID]" -days 365 | ...
@@ -2963,6 +3160,9 @@ sub esrch {
   GetOptions (
     "db=s" => \$db,
     "query=s" => \$query,
+    "split=s" => \$field,
+    "drop" => \$drop,
+    "spell" => \$spell,
     "sort=s" => \$sort,
     "days=i" => \$rldate,
     "mindate=s" => \$mndate,
@@ -3024,6 +3224,22 @@ sub esrch {
 
   $query = map_labels ($query);
   $query = map_macros ($query);
+
+  # drop stop words from query (undocumented)
+  if ( $drop ) {
+    $query = remove_stop_words ($query);
+  }
+
+  # spell check each query word (undocumented)
+  if ( $spell ) {
+    $query = spell_check_query ($dbase, $query);
+  }
+
+  # each query word is fielded (undocumented)
+  if ( $field ne "" ) {
+    $query = field_each_word ($field, $query);
+  }
+
   $enc = uri_escape($query);
   $arg = "db=$dbase&term=$enc";
   if ( $web ne "" ) {
