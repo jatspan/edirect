@@ -110,6 +110,7 @@ sub clearflags {
   $alias = "";
   $basx = "";
   $batch = false;
+  $clean = false;
   $cmd = "";
   $complexity = 0;
   $db = "";
@@ -159,6 +160,7 @@ sub clearflags {
   $type = "";
   $verbose = false;
   $web = "";
+  $word = false;
 }
 
 # gets a live UID for any database
@@ -2995,6 +2997,16 @@ sub spell_check_query {
   return $qury;
 }
 
+sub remove_punctuation {
+
+  my $qury = shift (@_);
+
+  $qury =~ s/[^a-zA-Z0-9]/ /g;
+  $qury =~ s/ +/ /g;
+
+  return $qury;
+}
+
 sub remove_stop_words {
 
   my $qury = shift (@_);
@@ -3135,11 +3147,16 @@ sub remove_stop_words {
     "would"
   );
 
+  # split to protect against regular expression artifacts
+  $qury =~ s/[^a-zA-Z0-9]/ /g;
+  $qury =~ s/ +/ /g;
+
   my @words = split (' ', $qury);
   my $dropped = "";
   my $pfx = "";
 
   foreach $term (@words) {
+
     if ( ! grep( /^$term$/, @stop_word_array ) ) {
       $dropped .= "$pfx$term";
       $pfx = " ";
@@ -3162,17 +3179,19 @@ sub esrch {
   GetOptions (
     "db=s" => \$db,
     "query=s" => \$query,
-    "drop" => \$drop,
-    "trim" => \$trim,
-    "trunc" => \$trunc,
-    "spell" => \$spell,
-    "split=s" => \$field,
     "sort=s" => \$sort,
     "days=i" => \$rldate,
     "mindate=s" => \$mndate,
     "maxdate=s" => \$mxdate,
     "datetype=s" => \$dttype,
     "label=s" => \$lbl,
+    "clean" => \$clean,
+    "word" => \$word,
+    "drop" => \$drop,
+    "trim" => \$trim,
+    "trunc" => \$trunc,
+    "spell" => \$spell,
+    "split=s" => \$field,
     "email=s" => \$emaddr,
     "tool=s" => \$tuul,
     "help" => \$help,
@@ -3228,6 +3247,27 @@ sub esrch {
 
   $query = map_labels ($query);
   $query = map_macros ($query);
+
+  # multi-step query cleaning (undocumented)
+  if ( $clean ) {
+    if ( $query =~ /^(.*)\(.+\)(.*)$/ ) {
+      $query = "$1 $2";
+    }
+    if ( $query =~ /^ +(.+)$/ ) {
+      $query = $1;
+    }
+    if ( $query =~ /^(.+) +$/ ) {
+      $query = $1;
+    }
+    $query =~ s/ +/ /g;
+    $query = remove_stop_words ($query);
+    $query = spell_check_query ($dbase, $query);
+  }
+
+  # remove punctuation from query (undocumented)
+  if ( $word ) {
+    $query = remove_punctuation ($query);
+  }
 
   # drop stop words from query (undocumented)
   if ( $drop ) {
