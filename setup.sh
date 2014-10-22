@@ -22,13 +22,19 @@ then
   echo "export PATH=\$PATH:$DIR" > $HOME/.bash_profile
 fi
 
-if ! grep 'bash_profile' "$HOME/.bashrc" >/dev/null 2>&1
+target=bash_profile
+if ! grep "$target" "$HOME/.bashrc" >/dev/null 2>&1
 then
-  echo 'source ~/.bash_profile' >> $HOME/.bashrc
+  if grep 'bashrc' "$HOME/.target" >/dev/null 2>&1
+  then
+    target=bashrc
+  else
+    echo 'source ~/.bash_profile' >> $HOME/.bashrc
+  fi
 fi
-if ! grep "PATH.*edirect" "$HOME/.bash_profile" >/dev/null 2>&1
+if ! grep "PATH.*edirect" "$HOME/.$target" >/dev/null 2>&1
 then
-  echo "export PATH=\$PATH:$DIR" >> $HOME/.bash_profile
+  echo "export PATH=\$PATH:$DIR" >> $HOME/.$target
 fi
 
 echo ""
