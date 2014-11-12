@@ -38,9 +38,16 @@ BEGIN {
 
 use lib "$root/aux/lib/perl5";
 use local::lib("$root/aux", '--no-create');
+my @lwp_deps = qw(Encode::Locale File::Listing
+                  HTML::Parser HTML::Tagset HTML::Tree
+                  HTTP:Cookies HTTP::Date HTTP::Message HTTP::Negotiate
+                  LWP::MediaTypes LWP::Protocol::HTTPS
+                  Net::HTTP URI WWW::RobotRules);
+for my $module (@lwp_deps, 'Time::HiRes') {
+    if ( ! CPAN::Shell->expandany($module)->inst_file ) {
+        CPAN::Shell->install($module);
+    }
+}
 if ( ! CPAN::Shell->expandany('LWP')->inst_file ) {
     CPAN::Shell->install('Bundle::LWP');
-}
-if ( ! CPAN::Shell->expandany('Time::HiRes')->inst_file ) {
-    CPAN::Shell->install('Time::HiRes');
 }
