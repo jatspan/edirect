@@ -99,7 +99,7 @@ $esummary = "esummary.fcgi";
 
 # EDirect version number
 
-$version = "2.00";
+$version = "2.10";
 
 # utility subroutines
 
@@ -3379,6 +3379,13 @@ sub esrch {
   write_edirect ( $dbase, $web, $key, $num, $stp, $err, $tool, $email );
 }
 
+#  eaddr returns the current user's e-mail address
+
+sub eaddr {
+  my $addr = get_email ();
+  print "$addr\n";
+}
+
 #  etest is an unadvertised function for development
 
 sub etest {
@@ -3412,6 +3419,8 @@ if ( scalar @ARGV > 0 and $ARGV[0] eq "-version" ) {
   ecntc ();
 } elsif ( $fnc eq "-notify" ) {
   entfy ();
+} elsif ( $fnc eq "-address" ) {
+  eaddr ();
 } elsif ( $fnc eq "-test" ) {
   etest ();
 } else {
