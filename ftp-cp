@@ -21,4 +21,4 @@ EOF
     echo exit
 }
 
-make_ftp_commands "$@" | ftp -n -i "$server"
+make_ftp_commands "$@" | ftp -n -V -i "$server"

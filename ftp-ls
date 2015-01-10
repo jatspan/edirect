@@ -8,7 +8,7 @@ addr=`"$mydir"/eaddress`
 
 list_file_names()
 {
-ftp -n -i "$1" <<EOF
+ftp -n -V -i "$1" <<EOF
 user anonymous "$addr"
 cd "$2"
 ls *
