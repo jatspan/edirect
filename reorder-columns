@@ -1,0 +1,14 @@
+#!/bin/sh
+# $Id$
+
+# Usage: reorder-columns COLUMN NUMBERS...
+
+dol="$"
+cmd=""
+com=""
+for col in "$@"
+do
+  cmd=`echo "$cmd$com $dol$col"`
+  com=","
+done
+awk -F '\t' -v 'OFS=\t' "{print $cmd}"
