@@ -3,12 +3,11 @@
 
 # Usage: reorder-columns COLUMN NUMBERS...
 
-dol="$"
 cmd=""
-com=""
+com=" $"
 for col in "$@"
 do
-  cmd=`echo "$cmd$com $dol$col"`
-  com=","
+  cmd=`echo "$cmd$com$col"`
+  com=", $"
 done
 awk -F '\t' -v 'OFS=\t' "{print $cmd}"
