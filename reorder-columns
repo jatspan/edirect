@@ -4,7 +4,7 @@
 # Usage: reorder-columns COLUMN NUMBERS...
 
 cmd=""
-com=" $"
+com="$"
 for col in "$@"
 do
   cmd=`echo "$cmd$com$col"`
