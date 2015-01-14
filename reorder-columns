@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 
 # Usage: reorder-columns COLUMN NUMBERS...
 

@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 
 # Usage: ftp-cp SERVER PATH FILE...
 
