@@ -15,4 +15,4 @@ exit
 EOF
 }
 
-list_file_names "$@" | sed -ne 's/^-.*[ 	]//p'
+list_file_names "$@" | sed -ne 's,^-.*[ 	],,p; s,^d.*[ 	]\(.*\),\1/,p'
