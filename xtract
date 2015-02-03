@@ -1977,7 +1977,7 @@ sub xtract {
 
     my $go_on = true;
 
-    # support -pfx, -sfx, -xml, and -doctype arguments (undocumented)
+    # support -pfx, -sfx, -xml, and -doctype arguments
 
     for ( my $i = 1; $i < $max; $i++ ) {
 
