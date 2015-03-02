@@ -1805,7 +1805,7 @@ Exploration Argument Hierarchy
 
 Conditional Execution
 
-  -match          Element [:value] required
+  -match          Element [@attribute] [:value] required
   -avoid          Skips if element matches
   -present        Requires indicated data pattern
   -absent         Pattern must not be present
