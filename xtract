@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "2.10";
+$version = "2.20";
 
 # initialize memory hash
 
@@ -868,23 +868,6 @@ sub has_element {
   }
 
 
-  # regular expression search for @attribute:value
-
-  if ( $str =~ /@(.+)\:(.+)/ ) {
-    my $attr = $1;
-    my $chld = $2;
-
-    if ( $line =~ /<\S+ ([^>]+)>/i ) {
-      my $atts = $1;
-      if ( $atts =~ /$attr=\"$chld\"/ ) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-
   # regular expression search for element@attribute:value
 
   if ( $str =~ /(.+)@(.+)\:(.+)/ ) {
@@ -903,6 +886,23 @@ sub has_element {
   }
 
 
+  # regular expression search for @attribute:value
+
+  if ( $str =~ /@(.+)\:(.+)/ ) {
+    my $attr = $1;
+    my $chld = $2;
+
+    if ( $line =~ /<\S+ ([^>]+)>/i ) {
+      my $atts = $1;
+      if ( $atts =~ /$attr=\"$chld\"/ ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+
   # regular expression search for element@attribute
 
   if ( $str =~ /(.+)@(.+)/ ) {
@@ -910,6 +910,22 @@ sub has_element {
     my $attr = $2;
 
     if ( $line =~ /<$ptrn ([^>]+)>/i ) {
+      my $atts = $1;
+      if ( $atts =~ /$attr=\"([^\"]+)\"/ ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+
+  # regular expression search for @attribute
+
+  if ( $str =~ /@(.+)/ ) {
+    my $attr = $1;
+
+    if ( $line =~ /<\S+ ([^>]+)>/i ) {
       my $atts = $1;
       if ( $atts =~ /$attr=\"([^\"]+)\"/ ) {
         return true;
