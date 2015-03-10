@@ -2675,6 +2675,14 @@ sub epost {
   my $pfx = "";
   my $loops = 0;
 
+  my $accession_mode = false;
+  if ( $field eq "ACCN" or $field eq "accn" or $field eq "ACC" or $field eq "acc" ) {
+    if ( $dbase eq "nucleotide" or $dbase eq "nuccore" or $dbase eq "est" or
+         $dbase eq "gss" or $dbase eq "protein" ) {
+      $accession_mode = true;
+    }
+  }
+
   if ( $field eq "UID" or $field eq "uid" ) {
 
     if ( $id ne "" ) {
@@ -2709,17 +2717,15 @@ sub epost {
     if ( $id ne "" ) {
 
       my @chunk = split (',', $id);
-      $query = join (' OR ', @chunk);
 
-      if ( $field eq "ACCN" or $field eq "accn" or $field eq "ACC" or $field eq "acc" ) {
-        if ( $dbase eq "nucleotide" or $dbase eq "nuccore" or $dbase eq "est" or
-             $dbase eq "gss" or $dbase eq "protein" ) {
-          $query =~ s/\./_/g;
-          $field = "ACCN";
-        }
+      if ( $accession_mode ) {
+        $query = join (' [ACCN] OR ', @chunk);
+        $query .= " [ACCN]";
+        $query =~ s/\./_/g;
+      } else {
+        $query = join (' OR ', @chunk);
+        $query .= " [$field]";
       }
-
-      $query .= " [$field]";
 
       ( $web, $key ) = post_chunk ( $dbase, $web, $key, $tool, $email, "", $query );
 
@@ -2732,23 +2738,27 @@ sub epost {
       while ( @rest ) {
         my @chunk = splice(@rest, 0, 2000);
 
-        $query = join (' OR ', @chunk);
+        if ( $accession_mode ) {
+          $query = join (' [ACCN] OR ', @chunk);
+        } else {
+          $query = join (' OR ', @chunk);
+        }
 
         if ( $query eq "" ) {
           die "Must pipe data into stdin\n";
         }
 
-        if ( $field eq "ACCN" or $field eq "accn" or $field eq "ACC" or $field eq "acc" ) {
-          if ( $dbase eq "nucleotide" or $dbase eq "nuccore" or $dbase eq "est" or
-               $dbase eq "gss" or $dbase eq "protein" ) {
-            $query =~ s/\./_/g;
-            $field = "ACCN";
-          }
+        if ( $accession_mode ) {
         } elsif ( ! $just_num ) {
           die "Non-numeric value found in post input\n";
         }
 
-        $query .= " [$field]";
+        if ( $accession_mode ) {
+          $query .= " [ACCN]";
+          $query =~ s/\./_/g;
+        } else {
+          $query .= " [$field]";
+        }
 
         ( $web, $key ) = post_chunk ( $dbase, $web, $key, $tool, $email, "", $query );
 
