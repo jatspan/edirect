@@ -85,6 +85,10 @@ $begin_time = Time::HiRes::time();
 use constant false => 0;
 use constant true  => 1;
 
+# EDirect version number
+
+$version = "2.30";
+
 # URL address components
 
 $base = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/";
@@ -96,10 +100,6 @@ $epost    = "epost.fcgi";
 $esearch  = "esearch.fcgi";
 $espell   = "espell.fcgi";
 $esummary = "esummary.fcgi";
-
-# EDirect version number
-
-$version = "2.20";
 
 # utility subroutines
 
