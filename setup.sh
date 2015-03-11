@@ -13,15 +13,6 @@ echo '1;' >> "$DIR/_cpan/CPAN/MyConfig.pm"
 perl -I"$DIR/_cpan" "$DIR/setup-deps.pl" </dev/null >"$DIR/setup-deps.log" 2>&1
 rm -rf "$DIR/_cpan"
 
-if [ ! -e "$HOME/.bashrc" ]
-then
-  echo 'source ~/.bash_profile' > $HOME/.bashrc
-fi
-if [ ! -e "$HOME/.bash_profile" ]
-then
-  echo "export PATH=\$PATH:$DIR" > $HOME/.bash_profile
-fi
-
 target=bash_profile
 if ! grep "$target" "$HOME/.bashrc" >/dev/null 2>&1
 then
