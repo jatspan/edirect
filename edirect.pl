@@ -65,6 +65,7 @@ use Data::Dumper;
 use Encode;
 use Getopt::Long;
 use HTML::Entities;
+use LWP::Simple;
 use LWP::UserAgent;
 use Net::hostent;
 use POSIX;
