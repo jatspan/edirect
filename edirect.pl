@@ -65,7 +65,6 @@ use Data::Dumper;
 use Encode;
 use Getopt::Long;
 use HTML::Entities;
-use LWP::Simple;
 use LWP::UserAgent;
 use Net::hostent;
 use POSIX;
@@ -87,7 +86,7 @@ use constant true  => 1;
 
 # EDirect version number
 
-$version = "2.30";
+$version = "2.40";
 
 # URL address components
 
@@ -579,6 +578,7 @@ sub do_post_yielding_ref {
   }
 
   $usragnt = new LWP::UserAgent (timeout => 300);
+  $usragnt->env_proxy;
 
   $req = new HTTP::Request POST => "$urlx";
   $req->content_type('application/x-www-form-urlencoded');
