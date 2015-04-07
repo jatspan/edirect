@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "2.40";
+$version = "2.50";
 
 # initialize memory hash
 
@@ -2226,6 +2226,91 @@ sub xtract {
           %memory = ();
           ( $tab, $ret ) = process_level ( $str, $pat, $chd, \@tmp, "", "", $initial_level, 1, 1 );
           print "$ret";
+        } elsif ( $in_pat) {
+          push (@working, $tkn);
+        }
+      }
+    }
+    if ( scalar @working > 0 ) {
+      my $str = join ("", @working);
+      @working = ();
+      my @tmp = @ARGV;
+      %memory = ();
+      ( $tab, $ret ) = process_level ( $str, $pat, $chd, \@tmp, "", "", $initial_level, 1, 1 );
+      print "$ret";
+    }
+
+    return;
+  }
+
+  if ( $max > 2 and $ARGV[0] eq "-Pattern" ) {
+
+    # capitalized -Pattern tracks depth of top-level pattern (e.g., for nested Taxon structure)
+
+    my $pat = $ARGV[1];
+    my $chd = "";
+    if ( $pat =~ /(.+)\/(.+)/ ) {
+      $pat = $1;
+      $chd = $2;
+    }
+
+    @ARGV = splice (@ARGV, 2, $max - 2);
+
+    my $in_pat = false;
+    my $lvl = 0;
+    my @working = ();
+
+    while ( defined($thisline = <STDIN>) ) {
+      $thisline =~ s/\r//g;
+      $thisline =~ s/\n//g;
+      $thisline =~ s/\t//g;
+      if ( $compress_spaces ) {
+        $thisline =~ s/ +/ /g;
+      }
+      $thisline =~ s/> +</></g;
+
+      my @tokens = split (/(?<=>)(?=<)/, $thisline);
+      foreach $tkn (@tokens) {
+        if ( $tkn =~ /^ +(.+)$/ ) {
+          $tkn = $1;
+        }
+        if ( $tkn =~ /^(.+) +$/ ) {
+          $tkn = $1;
+        }
+        if ( $tkn =~ /<$pat(?:\s+.+?)?>/ ) {
+          if ( $tkn =~ /<$pat(?:\s+.+?)?>(.+?)<\/$pat>/ ) {
+            if ( scalar @working > 0 ) {
+              my $str = join ("", @working);
+              @working = ();
+              my @tmp = @ARGV;
+              %memory = ();
+              ( $tab, $ret ) = process_level ( $str, $pat, $chd, \@tmp, "", "", $initial_level, 1, 1 );
+              print "$ret";
+            }
+            $in_pat = false;
+            my @tmp = @ARGV;
+            %memory = ();
+            ( $tab, $ret ) = process_level ( $tkn, $pat, $chd, \@tmp, "", "", $initial_level, 1, 1 );
+            print "$ret";
+          } else {
+            $lvl++;
+            push (@working, $tkn);
+            $in_pat = true;
+          }
+        } elsif ( $tkn =~ /<\/$pat>/ ) {
+          $lvl--;
+          if ($lvl < 1) {
+            push (@working, $tkn);
+            $in_pat = false;
+            my $str = join ("", @working);
+            @working = ();
+            my @tmp = @ARGV;
+            %memory = ();
+            ( $tab, $ret ) = process_level ( $str, $pat, $chd, \@tmp, "", "", $initial_level, 1, 1 );
+            print "$ret";
+          } elsif ( $in_pat) {
+            push (@working, $tkn);
+          }
         } elsif ( $in_pat) {
           push (@working, $tkn);
         }
