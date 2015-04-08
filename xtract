@@ -553,7 +553,13 @@ sub process_flags {
             if ( $tkn ne "?xml" and
                  $tkn ne "!DOCTYPE" and
                  $tkn ne "eSummaryResult" and
-                 $tkn ne "eInfoResult" ) {
+                 $tkn ne "eLinkResult" and
+                 $tkn ne "eInfoResult" and
+                 $tkn ne "PubmedArticleSet" and
+                 $tkn ne "DocumentSummarySet" and
+                 $tkn ne "INSDSet" and
+                 $tkn ne "Entrezgene-Set" and
+                 $tkn ne "TaxaSet" ) {
               for ( $i = 0; $i < $dpth; $i++ ) {
                 print "  ";
               }
@@ -619,7 +625,13 @@ sub process_flags {
             if ( $itm ne "?xml" and
                  $itm ne "!DOCTYPE" and
                  $itm ne "eSummaryResult" and
-                 $itm ne "eInfoResult" ) {
+                 $itm ne "eLinkResult" and
+                 $itm ne "eInfoResult" and
+                 $itm ne "PubmedArticleSet" and
+                 $itm ne "DocumentSummarySet" and
+                 $itm ne "INSDSet" and
+                 $itm ne "Entrezgene-Set" and
+                 $itm ne "TaxaSet" ) {
               $str .= "$pfx";
               $pfx = "/";
               $str .= "$arr[$i]";
