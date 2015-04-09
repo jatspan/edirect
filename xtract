@@ -1841,6 +1841,7 @@ Item Selection
 
 Miscellaneous Arguments
 
+  -trim           Skip past first tag
   -outline        Display outline of XML structure
   -synopsis       Display count of unique XML paths
   -format         Repair XML format and indentation
