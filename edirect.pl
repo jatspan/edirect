@@ -87,7 +87,7 @@ use constant true  => 1;
 
 # EDirect version number
 
-$version = "2.50";
+$version = "2.60";
 
 # URL address components
 

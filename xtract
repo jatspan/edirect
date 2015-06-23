@@ -44,7 +44,7 @@ use constant true  => 1;
 
 # xtract version number
 
-$version = "2.50";
+$version = "2.60";
 
 # initialize memory hash
 
@@ -849,6 +849,62 @@ sub has_element {
   my $str = shift (@_);
 
   if ( $str eq "" ) {
+    return false;
+  }
+
+
+  # track depth level of tokens if pattern was parent/child (undocumented)
+  
+  if ( $str =~ /(.+)\/(.+)/ ) {
+    my $ptrn = $1;
+    my $chld = $2;
+
+    my @vals = ();
+    my $lvl = 0;
+    my $dpth = 0;
+    my $in_pat = false;
+
+    my @tokens = split (/(?<=>)(?=<)/, $line);
+    foreach $tkn (@tokens) {
+
+      if ( $lvl < 0 ) {
+        # ignore remainder if level drops below zero
+      } elsif ( $tkn =~ /^<.+?>.+?<\/.+?>$/ ) {
+        # content-containing tag does not change level
+        if ( $in_pat and $lvl == $dpth ) {
+          push (@vals, $tkn);
+        }
+      } elsif ( $tkn =~ /\/>$/ ) {
+        # self-closing token does not change level
+        if ( $in_pat and $lvl == $dpth ) {
+          push (@vals, $tkn);
+        }
+      } elsif ( $tkn =~ /^<[^\/]/ ) {
+        # open tag increments level
+        $lvl++;
+        if ( $tkn =~ /<$ptrn(?:\s+.+?)?>/ and $dpth == 0 ) {
+          $in_pat = true;
+          $dpth = $lvl;
+          push (@vals, $tkn);
+        }
+      } elsif ( $tkn =~ /^<\// ) {
+        # close tag decrements level
+        if ( $in_pat and $tkn =~ /<\/$ptrn>/ and $lvl == $dpth ) {
+          push (@vals, $tkn);
+          $in_pat = false;
+          $dpth = 0;
+        }
+        $lvl--;
+      }
+    }
+
+    if ( scalar @vals > 0 ) {
+      my $sub = join ("", @vals);
+      if ( has_element ( $sub, $chld )) {
+        return true;
+      }
+    }
+
     return false;
   }
 
