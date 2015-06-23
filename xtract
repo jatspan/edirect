@@ -2185,6 +2185,11 @@ sub xtract {
                   print "  ";
                 }
                 print "$tkn\n";
+              } elsif ( $tkn =~ /^<(\S+).*?$/ ) {
+                for ( $i = 1; $i < $lvl; $i++ ) {
+                  print "  ";
+                }
+                print "$tkn";
               }
             }
           } elsif ( $tkn =~ /^<\// ) {
@@ -2196,6 +2201,12 @@ sub xtract {
               print "$tkn\n";
             }
             $lvl--;
+          } elsif ( $tkn =~ /^>$/ ) {
+            print "$tkn\n";
+          } elsif ( $tkn =~ />$/ ) {
+            print " $tkn\n";
+          } else {
+            print " $tkn";
           }
         }
       }
