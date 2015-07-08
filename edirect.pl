@@ -110,6 +110,7 @@ sub clearflags {
   $alias = "";
   $basx = "";
   $batch = false;
+  $bigram = false;
   $clean = false;
   $cmd = "";
   $complexity = 0;
@@ -162,6 +163,142 @@ sub clearflags {
   $verbose = false;
   $web = "";
   $word = false;
+
+  @stop_word_array = (
+    "a",
+    "about",
+    "again",
+    "all",
+    "almost",
+    "also",
+    "although",
+    "always",
+    "among",
+    "an",
+    "and",
+    "another",
+    "any",
+    "are",
+    "as",
+    "at",
+    "be",
+    "because",
+    "been",
+    "before",
+    "being",
+    "between",
+    "both",
+    "but",
+    "by",
+    "can",
+    "could",
+    "did",
+    "do",
+    "does",
+    "done",
+    "due",
+    "during",
+    "each",
+    "either",
+    "enough",
+    "especially",
+    "etc",
+    "for",
+    "found",
+    "from",
+    "further",
+    "had",
+    "has",
+    "have",
+    "having",
+    "here",
+    "how",
+    "however",
+    "i",
+    "if",
+    "in",
+    "into",
+    "is",
+    "it",
+    "its",
+    "itself",
+    "just",
+    "kg",
+    "km",
+    "made",
+    "mainly",
+    "make",
+    "may",
+    "mg",
+    "might",
+    "ml",
+    "mm",
+    "most",
+    "mostly",
+    "must",
+    "nearly",
+    "neither",
+    "no",
+    "nor",
+    "obtained",
+    "of",
+    "often",
+    "on",
+    "our",
+    "overall",
+    "perhaps",
+    "pmid",
+    "quite",
+    "rather",
+    "really",
+    "regarding",
+    "seem",
+    "seen",
+    "several",
+    "should",
+    "show",
+    "showed",
+    "shown",
+    "shows",
+    "significantly",
+    "since",
+    "so",
+    "some",
+    "such",
+    "than",
+    "that",
+    "the",
+    "their",
+    "theirs",
+    "them",
+    "then",
+    "there",
+    "therefore",
+    "these",
+    "they",
+    "this",
+    "those",
+    "through",
+    "thus",
+    "to",
+    "upon",
+    "use",
+    "used",
+    "using",
+    "various",
+    "very",
+    "was",
+    "we",
+    "were",
+    "what",
+    "when",
+    "which",
+    "while",
+    "with",
+    "within",
+    "without",
+    "would"
+  );
 }
 
 # gets a live UID for any database
@@ -2970,44 +3107,6 @@ my $srch_help = qq{
 
 };
 
-sub field_each_word {
-
-  my $fld = shift (@_);
-  my $qury = shift (@_);
-
-  my @words = split (' ', $qury);
-  $qury = "";
-  my $pfx = "";
-
-  foreach $term (@words) {
-    $qury .= "$pfx$term [$fld]";
-    $pfx = " AND ";
-  }
-
-  return $qury;
-}
-
-sub field_each_pair {
-
-  my $fld = shift (@_);
-  my $qury = shift (@_);
-
-  my @words = split (' ', $qury);
-  $qury = "";
-  my $pfx = "";
-
-  my $prev = "";
-  foreach $term (@words) {
-    if ( $prev ne "" ) {
-      $qury .= "$pfx$prev $term [$fld]";
-      $pfx = " AND ";
-    }
-    $prev = $term;
-  }
-
-  return $qury;
-}
-
 sub spell_check_query {
 
   my $db = shift (@_);
@@ -3040,145 +3139,20 @@ sub remove_punctuation {
   return $qury;
 }
 
-sub remove_stop_words {
+sub is_stop_word {
 
   my $qury = shift (@_);
 
-  my @stop_word_array = (
-    "a",
-    "about",
-    "again",
-    "all",
-    "almost",
-    "also",
-    "although",
-    "always",
-    "among",
-    "an",
-    "and",
-    "another",
-    "any",
-    "are",
-    "as",
-    "at",
-    "be",
-    "because",
-    "been",
-    "before",
-    "being",
-    "between",
-    "both",
-    "but",
-    "by",
-    "can",
-    "could",
-    "did",
-    "do",
-    "does",
-    "done",
-    "due",
-    "during",
-    "each",
-    "either",
-    "enough",
-    "especially",
-    "etc",
-    "for",
-    "found",
-    "from",
-    "further",
-    "had",
-    "has",
-    "have",
-    "having",
-    "here",
-    "how",
-    "however",
-    "i",
-    "if",
-    "in",
-    "into",
-    "is",
-    "it",
-    "its",
-    "itself",
-    "just",
-    "kg",
-    "km",
-    "made",
-    "mainly",
-    "make",
-    "may",
-    "mg",
-    "might",
-    "ml",
-    "mm",
-    "most",
-    "mostly",
-    "must",
-    "nearly",
-    "neither",
-    "no",
-    "nor",
-    "obtained",
-    "of",
-    "often",
-    "on",
-    "our",
-    "overall",
-    "perhaps",
-    "pmid",
-    "quite",
-    "rather",
-    "really",
-    "regarding",
-    "seem",
-    "seen",
-    "several",
-    "should",
-    "show",
-    "showed",
-    "shown",
-    "shows",
-    "significantly",
-    "since",
-    "so",
-    "some",
-    "such",
-    "than",
-    "that",
-    "the",
-    "their",
-    "theirs",
-    "them",
-    "then",
-    "there",
-    "therefore",
-    "these",
-    "they",
-    "this",
-    "those",
-    "through",
-    "thus",
-    "to",
-    "upon",
-    "use",
-    "used",
-    "using",
-    "various",
-    "very",
-    "was",
-    "we",
-    "were",
-    "what",
-    "when",
-    "which",
-    "while",
-    "with",
-    "within",
-    "without",
-    "would"
-  );
+  if ( grep( /^$qury$/, @stop_word_array ) ) {
+    return true;
+  }
+
+  return false;
+}
+
+sub remove_stop_words {
+
+  my $qury = shift (@_);
 
   # split to protect against regular expression artifacts
   $qury =~ s/[^a-zA-Z0-9]/ /g;
@@ -3198,6 +3172,46 @@ sub remove_stop_words {
 
   if ( $dropped ne "" ) {
     $qury = $dropped;
+  }
+
+  return $qury;
+}
+
+sub field_each_word {
+
+  my $fld = shift (@_);
+  my $qury = shift (@_);
+
+  my @words = split (' ', $qury);
+  $qury = "";
+  my $pfx = "";
+
+  foreach $term (@words) {
+    $qury .= "$pfx$term [$fld]";
+    $pfx = " AND ";
+  }
+
+  return $qury;
+}
+
+sub field_each_pair {
+
+  my $fld = shift (@_);
+  my $qury = shift (@_);
+
+  my @words = split (' ', $qury);
+  $qury = "";
+  my $pfx = "";
+
+  my $prev = "";
+  foreach $term (@words) {
+    if ( $prev ne "" ) {
+      if ( (! is_stop_word ($prev)) and (! is_stop_word ($term)) ) {
+        $qury .= "$pfx\"$prev $term\" [$fld]";
+      }
+      $pfx = " AND ";
+    }
+    $prev = $term;
   }
 
   return $qury;
@@ -3226,6 +3240,7 @@ sub esrch {
     "spell" => \$spell,
     "split=s" => \$field,
     "pair=s" => \$pair,
+    "bigram" => \$bigram,
     "email=s" => \$emaddr,
     "tool=s" => \$tuul,
     "help" => \$help,
@@ -3344,7 +3359,6 @@ sub esrch {
   # separately field query word pairs in future experimental bigram index (undocumented)
   if ( $pair ne "" ) {
     $query = remove_punctuation ($query);
-    $query = remove_stop_words ($query);
     if ( $query =~ /^ +(.+)$/ ) {
       $query = $1;
     }
@@ -3353,6 +3367,30 @@ sub esrch {
     }
     $query =~ s/ +/ /g;
     $query = field_each_pair ($pair, $query);
+  }
+
+  # generate stop-word-filtered word pairs for debugging (undocumented)
+  if ( $bigram ) {
+    $query = remove_punctuation ($query);
+    if ( $query =~ /^ +(.+)$/ ) {
+      $query = $1;
+    }
+    if ( $query =~ /^(.+) +$/ ) {
+      $query = $1;
+    }
+    $query =~ s/ +/ /g;
+
+    my @words = split (' ', $query);
+    my $prev = "";
+    foreach $term (@words) {
+      if ( $prev ne "" ) {
+        if ( (! is_stop_word ($prev)) and (! is_stop_word ($term)) ) {
+          print "$prev $term\n";
+        }
+      }
+      $prev = $term;
+    }
+    return;
   }
 
   $enc = uri_escape($query);
