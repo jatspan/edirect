@@ -142,6 +142,7 @@ sub clearflags {
   $neighbor = false;
   $num = "";
   $output = "";
+  $pair = "";
   $pipe = false;
   $query = "";
   $related = false;
@@ -2986,6 +2987,27 @@ sub field_each_word {
   return $qury;
 }
 
+sub field_each_pair {
+
+  my $fld = shift (@_);
+  my $qury = shift (@_);
+
+  my @words = split (' ', $qury);
+  $qury = "";
+  my $pfx = "";
+
+  my $prev = "";
+  foreach $term (@words) {
+    if ( $prev ne "" ) {
+      $qury .= "$pfx$prev $term [$fld]";
+      $pfx = " AND ";
+    }
+    $prev = $term;
+  }
+
+  return $qury;
+}
+
 sub spell_check_query {
 
   my $db = shift (@_);
@@ -3203,6 +3225,7 @@ sub esrch {
     "trunc" => \$trunc,
     "spell" => \$spell,
     "split=s" => \$field,
+    "pair=s" => \$pair,
     "email=s" => \$emaddr,
     "tool=s" => \$tuul,
     "help" => \$help,
@@ -3316,6 +3339,20 @@ sub esrch {
   # force each query word to be separately fielded (undocumented)
   if ( $field ne "" ) {
     $query = field_each_word ($field, $query);
+  }
+
+  # separately field query word pairs in future experimental bigram index (undocumented)
+  if ( $pair ne "" ) {
+    $query = remove_punctuation ($query);
+    $query = remove_stop_words ($query);
+    if ( $query =~ /^ +(.+)$/ ) {
+      $query = $1;
+    }
+    if ( $query =~ /^(.+) +$/ ) {
+      $query = $1;
+    }
+    $query =~ s/ +/ /g;
+    $query = field_each_pair ($pair, $query);
   }
 
   $enc = uri_escape($query);
