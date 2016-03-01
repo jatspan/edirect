@@ -1,4 +1,4 @@
-fleegle!
+fleegle and bingo!
 
 #!/bin/sh
 dir=`dirname "$0"`
