@@ -1,3 +1,5 @@
+FLEEGLE!
+
 ENTREZ DIRECT - README
 
 Entrez Direct (EDirect) is an advanced method for accessing the NCBI's set of interconnected Entrez databases (publication, nucleotide, protein, structure, gene, variation, expression, etc.) from a terminal window. It uses command-line arguments for the query terms and combines individual operations with UNIX pipes.
