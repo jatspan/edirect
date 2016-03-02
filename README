@@ -1,4 +1,4 @@
-FLEEGLE and DROOPER!
+Who you gonna call?
 
 ENTREZ DIRECT - README
 
@@ -30,7 +30,7 @@ This query returns the PubMed ID, first author name, and article title for PubMe
   5264137   Arroyo-Begovich A  In vitro formation of an active multienzyme complex
   14942736  BONNER DM          Gene-enzyme relationships in Neurospora.
   5361218   Caroline DF        Pyrimidine synthesis in Neurospora crassa: gene-enz
-  123642    Case ME            Genetic evidence on the organization and action of 
+  123642    Case ME            Genetic evidence on the organization and action of
   ...
 
 EDirect will run on UNIX and Macintosh computers that have the Perl language installed, and under the Cygwin UNIX-emulation environment on Windows PCs.
